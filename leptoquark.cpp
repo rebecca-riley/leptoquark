@@ -18,7 +18,7 @@ int main() {
     double R = 0.7;
     int jet_pt_cutoff = 50;
     // input, output file names
-    string input_filename = "ditop.hepmc",
+    string input_filename = "top_events.hepmc",
     jet_output_filename = "jet_output.txt",
     w_output_filename = "w_output.txt",
     t_output_filename = "t_output.txt";
