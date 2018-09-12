@@ -30,6 +30,8 @@ int main() {
     // counters
     int events = 0, final_state = 0, total_final_state = 0, neutrinos = 0,
         total_neutrinos = 0, num_particles_clustered = 0;
+    // event flags
+    bool event_has_tau_p = false, event_has_tau_m = false;
     // jet clustering parameters
     double R = 0.4;
     int jet_pt_cutoff = 50;
@@ -67,11 +69,14 @@ int main() {
         neutrinos = 0;
         num_particles_clustered = 0;
         // -- info -- //
+
+        // reset flags, vectors
         particles.clear();
+        event_has_tau_p = false;
+        event_has_tau_m = false;
 
         getline(hepmc_file,line);               // gets line after event or neutrino
         // cycle through lines until next event
-        bool event_has_tau_p = false, event_has_tau_m = false;
         while(!hepmc_file.eof() && line[0]!='E') {
             if(line[0]=='P'){                       // only want particles
                 // delimit line by space; results go into string vector 'delimited'
@@ -109,7 +114,8 @@ int main() {
 
         // CUT 1 -- final state must have two taus //
         if (!event_has_tau_p || !event_has_tau_m) {
-            cout << "Passing event "  << events << endl;
+            cout << "\033[31mPassing event "  << events << ": failed cut 1 (lacks
+                    tau+ or tau-)\033[0m" << endl;
             continue;
         }
 
