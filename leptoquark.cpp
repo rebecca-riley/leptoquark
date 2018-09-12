@@ -5,7 +5,7 @@ using namespace std;
 using namespace fastjet;
 
 // --------- CUT LIST --------- //
-// (1) select final state with two tau and two b-jets
+// (1) select final state with two taus and two b-jets
 // (2) T(l): pt > 50 GeV, |eta| < 2.1
 // (3) T(h): pt > 50 GeV, |eta| < 2.3
 // (4) T(l), T(h) must originate from the same vertex, have opposite charge, and have
@@ -25,6 +25,8 @@ int main() {
     // neutrino codes
     string nu_e = "12", nu_mu = "14", nu_tau = "16", nu_tau_pr = "18";
     string tau_p = "15", tau_m = "-15";
+    // status flags
+    string final = "1";
     // counters
     int events = 0, final_state = 0, total_final_state = 0, neutrinos = 0,
         total_neutrinos = 0, num_particles_clustered = 0;
@@ -32,7 +34,7 @@ int main() {
     double R = 0.4;
     int jet_pt_cutoff = 50;
     // input, output file names
-    string input_filename = "top_events.hepmc",
+    string input_filename = "ditop.hepmc",
     jet_output_filename = "jet_output.txt",
     w_output_filename = "w_output.txt",
     t_output_filename = "t_output.txt";
@@ -71,16 +73,14 @@ int main() {
         // cycle through lines until next event
         bool event_has_tau_p = false, event_has_tau_m = false;
         while(!hepmc_file.eof() && line[0]!='E') {
-            event_has_tau_p = false; event_has_tau_m = false;
-
             if(line[0]=='P'){                       // only want particles
                 // delimit line by space; results go into string vector 'delimited'
                 istringstream iss(line);
                 vector<string> delimited((istream_iterator<string>(iss)),istream_iterator<string>());
 
-                // only want non-neutrino final state particles
-                // pushed onto PseudoJet vector 'particles'
-                if(delimited[status]=="1") {
+                // only want non-neutrino, final state particles
+                // push candidates onto PseudoJet vector 'particles'
+                if(delimited[status]==final) {
                     // -- info -- //
                     final_state += 1;               // count all final state particles
                     total_final_state += 1;
@@ -107,7 +107,8 @@ int main() {
             getline(hepmc_file,line);
         } // next event reached or eof
 
-        if (event_has_tau_p && event_has_tau_m) {
+        // CUT 1 -- final state must have two taus //
+        if (!event_has_tau_p || !event_has_tau_m) {
             cout << "Passing event "  << events << endl;
             continue;
         }
