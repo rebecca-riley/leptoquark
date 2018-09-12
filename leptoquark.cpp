@@ -15,7 +15,7 @@ int main() {
     int events = 0, final_state = 0, total_final_state = 0, neutrinos = 0,
         total_neutrinos = 0, num_particles_clustered = 0;
     // jet clustering parameters
-    double R = 0.7;
+    double R = 0.4;
     int jet_pt_cutoff = 50;
     // input, output file names
     string input_filename = "top_events.hepmc",
