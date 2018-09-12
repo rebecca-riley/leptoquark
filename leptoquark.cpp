@@ -4,6 +4,20 @@
 using namespace std;
 using namespace fastjet;
 
+// --------- CUT LIST --------- //
+// (1) select final state with two tau and two b-jets
+// (2) T(l): pt > 50 GeV, |eta| < 2.1
+// (3) T(h): pt > 50 GeV, |eta| < 2.3
+// (4) T(l), T(h) must originate from the same vertex, have opposite charge, and have
+//     spatial separation sqrt((del_phi)^2 + (del_eta)^2) > 0.5
+// (5) b-jet reconstruction: anti-kt algorithm, R = 0.4
+//     jet requirements: pt > 50 GeV, |eta| < 2.4, spatial sep. from T(l),T(h) > 0.5
+// (6) at least 1 of 2 leading (highest pt?) jets is "b-tagged"
+// (7) select T(l)/T(h) + b_grtr/b_less combination that minimizes mass difference
+//     between pair
+// (8) check that T(h) + jet > 250 GeV
+
+
 int main() {
     // --------- CONSTANTS --------- //
     // indices
