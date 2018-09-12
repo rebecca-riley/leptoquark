@@ -138,78 +138,79 @@ int main() {
         // -- info -- //
 
 
-        // --------- PARTICLE RECONSTRUCTION --------- //
-        // note, for array:
-        // array[row][column] = array[j][i] ; j identifies the row, i the column
-        // array[row][column][layer] = array[k][j][i]
-        int n = jets.size()-1;
-        vector<double> inv_mass_w_vec;
-        // total two-jet combinatorics (for finding w)
-        double inv_mass_w_arr [n][n] = { };
-        for (int i = 0; i <= n-1; i++) {
-            for (int j = i+1; j <= n; j++) {
-                inv_mass_w_arr[j][i] = (jets[i] + jets[j]).m();
-                inv_mass_w_vec.push_back(inv_mass_w_arr[j][i]);
-            }
-        }
-        // unique two-jet combinatorics
-        double within_percent_of = 0.2;
-        // determine base 2-jet combinations
-        for (int i = 0; i<= n-1; i++) {                     // i = columns
-            for (int j = i+1; j <= n; j++) {                // j = rows
-                // determine comparison 2-jet combinations
-                for (int x = i+1; x <= n-1; x++) {          // x = columns > i
-                    for (int y = 1; y <= n; y++) {          // y = all rows
-                        // skip disallowed combinations
-                        if (!(x<y) || i==x || i==y || j==x || j==y) continue;
+        // --------- RECOMBINATORICS COMMENTED OUT FOR TIME BEING --------- //
+        // // --------- PARTICLE RECONSTRUCTION --------- //
+        // // note, for array:
+        // // array[row][column] = array[j][i] ; j identifies the row, i the column
+        // // array[row][column][layer] = array[k][j][i]
+        // int n = jets.size()-1;
+        // vector<double> inv_mass_w_vec;
+        // // total two-jet combinatorics (for finding w)
+        // double inv_mass_w_arr [n][n] = { };
+        // for (int i = 0; i <= n-1; i++) {
+        //     for (int j = i+1; j <= n; j++) {
+        //         inv_mass_w_arr[j][i] = (jets[i] + jets[j]).m();
+        //         inv_mass_w_vec.push_back(inv_mass_w_arr[j][i]);
+        //     }
+        // }
+        // // unique two-jet combinatorics
+        // double within_percent_of = 0.2;
+        // // determine base 2-jet combinations
+        // for (int i = 0; i<= n-1; i++) {                     // i = columns
+        //     for (int j = i+1; j <= n; j++) {                // j = rows
+        //         // determine comparison 2-jet combinations
+        //         for (int x = i+1; x <= n-1; x++) {          // x = columns > i
+        //             for (int y = 1; y <= n; y++) {          // y = all rows
+        //                 // skip disallowed combinations
+        //                 if (!(x<y) || i==x || i==y || j==x || j==y) continue;
 
-                        // store only desired combinations
-                        double m1 = (jets[i] + jets[j]).m();
-                        double m2 = (jets[x] + jets[y]).m();
+        //                 // store only desired combinations
+        //                 double m1 = (jets[i] + jets[j]).m();
+        //                 double m2 = (jets[x] + jets[y]).m();
 
-                        // -- info -- //
-                        cout << "[" << i << "][" << j << "], ";
-                        cout << "[" << x << "][" << y << "]: ";
-                        // -- info -- //
-                        if (abs(m1-m2) < (within_percent_of*max(m1,m2))) {
-                            inv_mass_w_vec.push_back(m1);
-                            inv_mass_w_vec.push_back(m2);
-                        // -- info -- //
-                            cout << "\033[32m" << m1 << "\t" << m2 << "\033[0m" << endl;
-                        }
-                        else {
-                            cout << m1 << "\t" << m2 << endl;
-                        // -- info -- //
-                        }
-                    }
-                }
-            }
-        }
+        //                 // -- info -- //
+        //                 cout << "[" << i << "][" << j << "], ";
+        //                 cout << "[" << x << "][" << y << "]: ";
+        //                 // -- info -- //
+        //                 if (abs(m1-m2) < (within_percent_of*max(m1,m2))) {
+        //                     inv_mass_w_vec.push_back(m1);
+        //                     inv_mass_w_vec.push_back(m2);
+        //                 // -- info -- //
+        //                     cout << "\033[32m" << m1 << "\t" << m2 << "\033[0m" << endl;
+        //                 }
+        //                 else {
+        //                     cout << m1 << "\t" << m2 << endl;
+        //                 // -- info -- //
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
-        // three-jet combinatorics (for finding t)
-        double inv_mass_t_arr [n][n][n] = { };
-        vector<double> inv_mass_t_vec;
-        for (int i = 0; i <= n-2; i++) {
-            for (int j = i+1; j <= n-1; j++) {
-                for (int k = j+1; k <= n; k++) {
-                    inv_mass_t_arr[k][j][i] = (jets[i] + jets[j] + jets[k]).m();
-                    inv_mass_t_vec.push_back(inv_mass_t_arr[k][j][i]);
-                }
-            }
-        }
+        // // three-jet combinatorics (for finding t)
+        // double inv_mass_t_arr [n][n][n] = { };
+        // vector<double> inv_mass_t_vec;
+        // for (int i = 0; i <= n-2; i++) {
+        //     for (int j = i+1; j <= n-1; j++) {
+        //         for (int k = j+1; k <= n; k++) {
+        //             inv_mass_t_arr[k][j][i] = (jets[i] + jets[j] + jets[k]).m();
+        //             inv_mass_t_vec.push_back(inv_mass_t_arr[k][j][i]);
+        //         }
+        //     }
+        // }
 
-        // -- info -- //
-        // prints invariant masses from w,t searches to w,t output files
-        sort(inv_mass_w_vec.begin(),inv_mass_w_vec.end());
-        for (int i = 0; i < inv_mass_w_vec.size(); i++) {
-            w_output << inv_mass_w_vec[i] << endl;
-        }
+        // // -- info -- //
+        // // prints invariant masses from w,t searches to w,t output files
+        // sort(inv_mass_w_vec.begin(),inv_mass_w_vec.end());
+        // for (int i = 0; i < inv_mass_w_vec.size(); i++) {
+        //     w_output << inv_mass_w_vec[i] << endl;
+        // }
 
-        sort(inv_mass_t_vec.begin(),inv_mass_t_vec.end());
-        for (int i = 0; i < inv_mass_t_vec.size(); i++) {
-            t_output << inv_mass_t_vec[i] << endl;
-        }
-        // -- info -- //
+        // sort(inv_mass_t_vec.begin(),inv_mass_t_vec.end());
+        // for (int i = 0; i < inv_mass_t_vec.size(); i++) {
+        //     t_output << inv_mass_t_vec[i] << endl;
+        // }
+        // // -- info -- //
 
         // break;                                   // DEBUG -- run single event
     }
