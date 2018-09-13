@@ -33,6 +33,7 @@ int main() {
     // counters
     int events = 0, final_state = 0, total_final_state = 0, neutrinos = 0,
         total_neutrinos = 0, num_particles_clustered = 0;
+    int num_fail = 0;
     // event flags
     bool event_has_tau_p = false, event_has_tau_m = false;
     // jet clustering parameters
@@ -131,6 +132,7 @@ int main() {
 
         // CUT 1 -- final state must have two taus //
         if (!event_has_tau_p || !event_has_tau_m) {
+            num_fail++;
             print_event(events,"failed cut 1 (lacks tau+ or tau-)",RED);
             continue;
         }
@@ -142,6 +144,7 @@ int main() {
 
         }
         if (!plus_pass) {
+            num_fail++;
             print_event(events,"failed cut 2 (pt of tau+ < 50 GeV or |eta| > 2.3)",RED);
             continue;
         }
@@ -152,6 +155,7 @@ int main() {
             if ((*it).pt() > 50 && abs((*it).eta()) < 2.3) minus_pass = true;
         }
         if (!minus_pass) {
+            num_fail++;
             print_event(events,"failed cut 3 (pt of tau- < 50 GeV or |eta| > 2.3)",RED);
             continue;
         }
@@ -159,7 +163,7 @@ int main() {
 
         // --------- JET CLUSTERING --------- //
         // -- info -- //
-        // if (events%50 == 0) cout << events << endl;
+        if (events%50 == 0) cout << events << endl;
         // -- info -- //
         // if (events>5) continue;  // DEBUG -- run jet analysis for specific events
 
@@ -278,6 +282,8 @@ int main() {
     cout << "Number of events processed: " << events << endl;
     cout << "Number of final state particles: " << total_final_state << endl;
     cout << "Number of final state neutrinos: " << total_neutrinos << endl;
+    cout << "Number of events passing cuts: " << (events - num_fail) << endl;
+    cout << "Percent pass: " << (((events - num_fail))/double(events)*100) << endl;
 
     jet_output << "Number of events processed: " << events << endl;
     jet_output << "Number of final state particles: " << total_final_state << endl;
