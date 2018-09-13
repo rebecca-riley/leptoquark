@@ -4,6 +4,9 @@
 using namespace std;
 using namespace fastjet;
 
+// --------- HELPER FUNCTIONS --------- //
+void print_event(int event_number, string message, int color);
+
 // --------- CUT LIST --------- //
 // (1) select final state with two taus and two b-jets
 // (2) T(l): pt > 50 GeV, |eta| < 2.1
@@ -40,6 +43,8 @@ int main() {
     jet_output_filename = "jet_output.txt",
     w_output_filename = "w_output.txt",
     t_output_filename = "t_output.txt";
+    // colors
+    const int RED = 31, GREEN = 32, YELLOW = 33, BLUE = 34, PINK = 35, CYAN = 36;
 
     /// --------- INITIALIZATION --------- //
     vector<PseudoJet> particles;
@@ -126,8 +131,7 @@ int main() {
 
         // CUT 1 -- final state must have two taus //
         if (!event_has_tau_p || !event_has_tau_m) {
-            cout << "EVENT "  << events;
-            cout << ": \033[31mfailed cut 1 (lacks tau+ or tau-)\033[0m" << endl;
+            print_event(events,"failed cut 1 (lacks tau+ or tau-)",RED);
             continue;
         }
 
@@ -137,8 +141,7 @@ int main() {
             if ((*it).pt() > 50) plus_pass = true;
         }
         if (!plus_pass) {
-            cout << "EVENT "  << events;
-            cout << ": \033[31mfailed cut 2 (pt of tau+ < 50 GeV)\033[0m" << endl;
+            print_event(events,"failed cut 2 (pt of tau+ < 50 GeV)",RED);
             continue;
         }
 
@@ -148,8 +151,7 @@ int main() {
             if ((*it).pt() > 50) minus_pass = true;
         }
         if (!minus_pass) {
-            cout << "EVENT "  << events;
-            cout << ": \033[31mfailed cut 3 (pt of tau- < 50 GeV)\033[0m" << endl;
+            print_event(events,"failed cut 3 (pt of tau- < 50 GeV)",RED);
             continue;
         }
 
@@ -290,4 +292,9 @@ int main() {
     t_output.close();
 
     return 0;
+}
+
+void print_event(int event_number, string message, int color = 37) {
+    cout << "EVENT " << event_number << ": ";
+    cout << ("\033[" + to_string(color) + "m" + message + "\033[0m") << endl;
 }
