@@ -43,6 +43,8 @@ int main() {
 
     /// --------- INITIALIZATION --------- //
     vector<PseudoJet> particles;
+    vector<PseudoJet> tau_plus;
+    vector<PseudoJet> tau_minus;
     vector<vector<PseudoJet>> passing_events;
     JetDefinition jet_def(antikt_algorithm, R);
 
@@ -72,6 +74,8 @@ int main() {
 
         // reset flags, vectors
         particles.clear();
+        tau_plus.clear();
+        tau_minus.clear();
         event_has_tau_p = false;
         event_has_tau_m = false;
 
@@ -101,8 +105,16 @@ int main() {
                         goto NextItem;
                     }
 
-                    if(delimited[pdg_code] == tau_p) event_has_tau_p = true;
-                    if(delimited[pdg_code] == tau_m) event_has_tau_m = true;
+                    if(delimited[pdg_code] == tau_p) {
+                        event_has_tau_p = true;
+                        tau_plus.push_back(PseudoJet(stof(delimited[px]),stof(delimited[py]),
+                                                 stof(delimited[pz]),stof(delimited[E])));
+                    }
+                    if(delimited[pdg_code] == tau_m) {
+                        event_has_tau_m = true;
+                        tau_minus.push_back(PseudoJet(stof(delimited[px]),stof(delimited[py]),
+                                                 stof(delimited[pz]),stof(delimited[E])));
+                    }
 
                     particles.push_back(PseudoJet(stof(delimited[px]),stof(delimited[py]),
                                                   stof(delimited[pz]),stof(delimited[E])));
@@ -114,16 +126,39 @@ int main() {
 
         // CUT 1 -- final state must have two taus //
         if (!event_has_tau_p || !event_has_tau_m) {
-            cout << "\033[31mPassing event "  << events << ": failed cut 1 (lacks
-                    tau+ or tau-)\033[0m" << endl;
+            cout << "EVENT "  << events;
+            cout << ": \033[31mfailed cut 1 (lacks tau+ or tau-)\033[0m" << endl;
             continue;
         }
 
+        // CUT 2 -- taus must have pt > 50 GeV, |eta| < 2.3 //
+        bool plus_pass = false;
+        for(vector<PseudoJet>::iterator it=tau_plus.begin(); it!=tau_plus.end(); ++it) {
+            if ((*it).pt() > 50) plus_pass = true;
+        }
+        if (!plus_pass) {
+            cout << "EVENT "  << events;
+            cout << ": \033[31mfailed cut 2 (pt of tau+ < 50 GeV)\033[0m" << endl;
+            continue;
+        }
+
+        // CUT 3 -- taus must have pt > 50 GeV, |eta| < 2.3 //
+        bool minus_pass = false;
+        for(vector<PseudoJet>::iterator it=tau_plus.begin(); it!=tau_plus.end(); ++it) {
+            if ((*it).pt() > 50) minus_pass = true;
+        }
+        if (!minus_pass) {
+            cout << "EVENT "  << events;
+            cout << ": \033[31mfailed cut 3 (pt of tau- < 50 GeV)\033[0m" << endl;
+            continue;
+        }
+
+
         // --------- JET CLUSTERING --------- //
         // -- info -- //
-        if (events%50 == 0) cout << events << endl;
+        // if (events%50 == 0) cout << events << endl;
         // -- info -- //
-        if (events>5) continue;  // DEBUG -- run jet analysis for specific events
+        // if (events>5) continue;  // DEBUG -- run jet analysis for specific events
 
         ClusterSequence cs(particles, jet_def);
         vector<PseudoJet> jets = sorted_by_pt(cs.inclusive_jets(jet_pt_cutoff));
