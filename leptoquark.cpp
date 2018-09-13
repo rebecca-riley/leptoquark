@@ -138,20 +138,21 @@ int main() {
         // CUT 2 -- taus must have pt > 50 GeV, |eta| < 2.3 //
         bool plus_pass = false;
         for(vector<PseudoJet>::iterator it=tau_plus.begin(); it!=tau_plus.end(); ++it) {
-            if ((*it).pt() > 50) plus_pass = true;
+            if ((*it).pt() > 50 && abs((*it).eta()) < 2.3) plus_pass = true;
+
         }
         if (!plus_pass) {
-            print_event(events,"failed cut 2 (pt of tau+ < 50 GeV)",RED);
+            print_event(events,"failed cut 2 (pt of tau+ < 50 GeV or |eta| > 2.3)",RED);
             continue;
         }
 
         // CUT 3 -- taus must have pt > 50 GeV, |eta| < 2.3 //
         bool minus_pass = false;
         for(vector<PseudoJet>::iterator it=tau_plus.begin(); it!=tau_plus.end(); ++it) {
-            if ((*it).pt() > 50) minus_pass = true;
+            if ((*it).pt() > 50 && abs((*it).eta()) < 2.3) minus_pass = true;
         }
         if (!minus_pass) {
-            print_event(events,"failed cut 3 (pt of tau- < 50 GeV)",RED);
+            print_event(events,"failed cut 3 (pt of tau- < 50 GeV or |eta| > 2.3)",RED);
             continue;
         }
 
