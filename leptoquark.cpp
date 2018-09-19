@@ -52,8 +52,7 @@ int main() {
 
     /// --------- INITIALIZATION --------- //
     vector<PseudoJet> particles;
-    vector<vector<PseudoJet>> tau_plus;
-    vector<vector<PseudoJet>> tau_minus;
+    vector<vector<PseudoJet>> taus;
     vector<vector<PseudoJet>> passing_events;
     JetDefinition jet_def(antikt_algorithm, R);
 
@@ -83,8 +82,7 @@ int main() {
 
         // reset flags, vectors
         particles.clear();
-        tau_plus.clear();
-        tau_minus.clear();
+        taus.clear();
         event_has_tau_p = false;
         event_has_tau_m = false;
 
@@ -114,12 +112,12 @@ int main() {
 
                     if(delimited[pdg_code] == tau_p) {
                         event_has_tau_p = true;
-                        tau_plus.push_back(vector<PseudoJet> {PseudoJet(stof(delimited[px]),stof(delimited[py]),
+                        taus.push_back(vector<PseudoJet> {PseudoJet(stof(delimited[px]),stof(delimited[py]),
                                                  stof(delimited[pz]),stof(delimited[E])),current_vertex} );
                     }
                     if(delimited[pdg_code] == tau_m) {
                         event_has_tau_m = true;
-                        tau_minus.push_back(vector<PseudoJet> {PseudoJet(stof(delimited[px]),stof(delimited[py]),
+                        taus.push_back(vector<PseudoJet> {PseudoJet(stof(delimited[px]),stof(delimited[py]),
                                                  stof(delimited[pz]),stof(delimited[E])),current_vertex} );
                     }
 
@@ -144,12 +142,16 @@ int main() {
         }
 
         // CUT 4 -- taus must originate from same vertex //
-        for(vector<vector<PseudoJet>>::iterator it=tau_plus.begin(); it!=tau_plus.end(); ++it) {
-            cout << "particle: " << (*it)[0].px() << "\tvertex: " << (*it)[1].px() << endl;
+        bool vertex_match = false;
+        for (int i = 0; i < taus.size() - 1; i++) {     // compare all combinations of taus
+            for (int j = i + 1; j < taus.size(); j++) {
+                if (taus[i][1] == taus[j][1]) vertex_match = true;
+            }
         }
-
-        for(vector<vector<PseudoJet>>::iterator it=tau_minus.begin(); it!=tau_minus.end(); ++it) {
-            cout << "particle: " << (*it)[0].px() << "\tvertex: " << (*it)[1].px() << endl;
+        if (!vertex_match) {
+            num_fail++;
+            print_event(events,"failed cut 4 (taus originate from different vertices)",RED);
+            continue;
         }
 
         // // CUT 2 -- taus must have pt > 50 GeV, |eta| < 2.3 //
