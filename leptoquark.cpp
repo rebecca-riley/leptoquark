@@ -209,7 +209,7 @@ int main() {
 
         // --------- JET CLUSTERING --------- //
         // -- info -- //
-        if (events%50 == 0) cout << events << endl;
+        // if (events%50 == 0) cout << events << endl;
         // -- info -- //
         // if (events>5) continue;  // DEBUG -- run jet analysis for specific events
 
@@ -224,13 +224,13 @@ int main() {
 
         // -- info -- //
         // write jets for event to jet_output
-        jet_output << "EVENT " << events
-                   << " (" << jets.size() << " jets w/ pt>" << jet_pt_cutoff << ")"
-                   << endl;
-        for (unsigned i = 0; i < jets.size(); i++) {
-            jet_output << "jet " << i << " " << jets[i].E() << " " << jets[i].px()
-                       << " " << jets[i].py() << " " << jets[i].pz() << endl;
-        }
+        // jet_output << "EVENT " << events
+        //            << " (" << jets.size() << " jets w/ pt>" << jet_pt_cutoff << ")"
+        //            << endl;
+        // for (unsigned i = 0; i < jets.size(); i++) {
+        //     jet_output << "jet " << i << " " << jets[i].E() << " " << jets[i].px()
+        //                << " " << jets[i].py() << " " << jets[i].pz() << endl;
+        // }
 
         // find total number of particles clustered
         vector<PseudoJet> all_jets = cs.inclusive_jets();
