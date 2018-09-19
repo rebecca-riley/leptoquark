@@ -42,6 +42,8 @@ int main() {
     // jet clustering parameters
     const double R = 0.4;
     const int jet_pt_cutoff = 50;
+    // null jet
+    const PseudoJet null_jet = PseudoJet(0,0,0,0);
     // colors
     const int RED = 31, GREEN = 32, YELLOW = 33, BLUE = 34, PINK = 35, CYAN = 36;
     // input, output file names
@@ -66,6 +68,7 @@ int main() {
     PseudoJet current_vertex;     // bastardization of PsuedoJet to use functions
     // vectors
     vector<Tau> taus;
+    PseudoJet tau_candidates[2];
     vector<PseudoJet> particles;
     vector<vector<PseudoJet>> passing_events;
     // FastJet setup
@@ -99,6 +102,7 @@ int main() {
         // reset vectors
         particles.clear();
         taus.clear();
+        tau_candidates[0] = null_jet; tau_candidates[1] = null_jet;
 
         getline(hepmc_file,line);               // gets line after event or neutrino
         // cycle through lines until next event
@@ -140,7 +144,7 @@ int main() {
         } // next event reached or eof
 
 
-        // --------- CUTS --------- //
+        // --------- CUTS ON TAUS --------- //
         // cut 1 -- at least two taus
         if (taus.size() < 2) {
             num_fail++;
@@ -169,6 +173,10 @@ int main() {
                     if (sqrt(pow((taus[i].tau.phi() - taus[j].tau.phi()),2) +
                              pow((taus[i].tau.eta() - taus[j].tau.eta()),2)) > 0.5)
                         spatially_separated = true;
+
+                    // usable taus go on array tau_candidates
+                    tau_candidates[0] = taus[i].tau;
+                    tau_candidates[1] = taus[j].tau;
                 }
             }
         }
