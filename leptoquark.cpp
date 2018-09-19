@@ -12,6 +12,7 @@ const int PX = 3, PY = 4, PZ = 5, E = 6;
 
 // --------- HELPER FUNCTION DECLARATIONS --------- //
 PseudoJet get_jet(vector<string> delimited);
+double get_spatial_separation(PseudoJet jet1, PseudoJet jet2);
 void print_event(int event_number, string message, int color);
 vector<string> split_line(string line);
 
@@ -170,8 +171,7 @@ int main() {
                     if (abs(taus[i].tau.eta()) < 2.3 && abs(taus[j].tau.eta()) < 2.3)
                         eta_pass = true;
                     // cut 4 -- spatial separation
-                    if (sqrt(pow((taus[i].tau.phi() - taus[j].tau.phi()),2) +
-                             pow((taus[i].tau.eta() - taus[j].tau.eta()),2)) > 0.5)
+                    if (get_spatial_separation(taus[i].tau,taus[j].tau) > 0.5)
                         spatially_separated = true;
 
                     // usable taus go on array tau_candidates
@@ -358,6 +358,10 @@ int main() {
 PseudoJet get_jet(vector<string> delimited) {
     return PseudoJet(stof(delimited[PX]),stof(delimited[PY]),
                      stof(delimited[PZ]),stof(delimited[E]));
+}
+
+double get_spatial_separation(PseudoJet jet1, PseudoJet jet2) {
+    return sqrt(pow( (jet1.phi()-jet2.phi()), 2) + pow( (jet1.eta()-jet2.eta()), 2));
 }
 
 void print_event(int event_number, string message, int color = 37) {
