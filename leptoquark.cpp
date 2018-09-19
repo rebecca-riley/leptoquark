@@ -225,6 +225,14 @@ int main() {
                 jets.erase(jets.begin()+i);
         }
 
+        // cut 5 -- at least two jets must remain for possible b-tagging
+        if (jets.size() < 2) {
+            num_fail++;
+            print_event(events,"failed cut 5: less than two jets remaining after"
+                                "eta, separation cuts",RED);
+            continue;
+        }
+
         // -- info -- //
         // write jets for event to jet_output
         // jet_output << "EVENT " << events
