@@ -150,18 +150,27 @@ int main() {
 
         // cuts 2-4
         bool vertex_match = false, opposite_charge = false, pt_pass = false,
-             eta_pass = false;
+             eta_pass = false, spatially_separated = false;
         for (int i = 0; i < taus.size() - 1; i++) {     // compare all combinations of taus
             for (int j = i + 1; j < taus.size(); j++) {
                 // cut 4 -- same vertex
                 if (taus[i].vertex == taus[j].vertex) {
                     vertex_match = true;
                     // cut 4 -- opposite charge
-                    if (taus[i].is_tau_plus == !taus[j].is_tau_plus) opposite_charge = true;
+                    if (taus[i].is_tau_plus == !taus[j].is_tau_plus)
+                        opposite_charge = true;
                     // cut 2 -- pt > 50
-                    if (taus[i].tau.pt() > 50 && taus[j].tau.pt() > 50) pt_pass = true;
+                    if (taus[i].tau.pt() > 50 && taus[j].tau.pt() > 50)
+                        pt_pass = true;
                     // cut 3 -- |eta| < 2.3
-                    if (abs(taus[i].tau.eta()) < 2.3 && abs(taus[j].tau.eta()) < 2.3) eta_pass = true;
+                    if (abs(taus[i].tau.eta()) < 2.3 && abs(taus[j].tau.eta()) < 2.3)
+                        eta_pass = true;
+                    // cut 4 -- spatial separation
+                    cout << sqrt( pow(( taus[i].tau.phi() - taus[j].tau.phi() ),2) +
+                                  pow(( taus[i].tau.eta() - taus[j].tau.eta() ),2)) << endl;
+                    if (sqrt(pow((taus[i].tau.phi() - taus[j].tau.phi()),2) +
+                             pow((taus[i].tau.eta() - taus[j].tau.eta()),2)) > 0.5)
+                        spatially_separated = true;
                 }
             }
         }
@@ -183,6 +192,11 @@ int main() {
         if (!eta_pass) {
             num_fail++;
             print_event(events,"failed cut 3 (taus have |eta| >= 2.3)",RED);
+            continue;
+        }
+        if (!spatially_separated) {
+            num_fail++;
+            print_event(events,"failed cut 4 (taus have separation <= 0.5)",RED);
             continue;
         }
 
