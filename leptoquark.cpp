@@ -4,6 +4,10 @@
 using namespace std;
 using namespace fastjet;
 
+// --------- GLOBAL FLAGS --------- //
+// supress failure messages
+const bool SUPRESS_FAILURE_OUTPUT = true;
+
 // --------- HELPER FUNCTION DECLARATIONS --------- //
 void print_event(int event_number, string message, int color);
 vector<string> split_line(string line);
@@ -337,6 +341,7 @@ int main() {
 
 // --------- HELPER FUNCTIONS --------- //
 void print_event(int event_number, string message, int color = 37) {
+    if (SUPRESS_FAILURE_OUTPUT) return;
     cout << "EVENT " << event_number << ": ";
     cout << ("\033[" + to_string(color) + "m" + message + "\033[0m") << endl;
 }
