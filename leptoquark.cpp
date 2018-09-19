@@ -49,10 +49,16 @@ int main() {
     const int RED = 31, GREEN = 32, YELLOW = 33, BLUE = 34, PINK = 35, CYAN = 36;
     // event vertex
     PseudoJet current_vertex;     // bastardization of PsuedoJet to use functions
+    // helper structs
+    struct Tau {
+        PseudoJet tau;
+        bool is_tau_plus;
+        PseudoJet vertex;
+    };
 
     /// --------- INITIALIZATION --------- //
     vector<PseudoJet> particles;
-    vector<vector<PseudoJet>> taus;
+    vector<Tau> taus;
     vector<vector<PseudoJet>> passing_events;
     JetDefinition jet_def(antikt_algorithm, R);
 
@@ -112,13 +118,19 @@ int main() {
 
                     if(delimited[pdg_code] == tau_p) {
                         event_has_tau_p = true;
-                        taus.push_back(vector<PseudoJet> {PseudoJet(stof(delimited[px]),stof(delimited[py]),
-                                                 stof(delimited[pz]),stof(delimited[E])),current_vertex} );
+                        taus.push_back(
+                            Tau {PseudoJet(stof(delimited[px]),stof(delimited[py]),
+                                           stof(delimited[pz]),stof(delimited[E])),
+                                 true,
+                                 current_vertex} );
                     }
                     if(delimited[pdg_code] == tau_m) {
                         event_has_tau_m = true;
-                        taus.push_back(vector<PseudoJet> {PseudoJet(stof(delimited[px]),stof(delimited[py]),
-                                                 stof(delimited[pz]),stof(delimited[E])),current_vertex} );
+                        taus.push_back(
+                            Tau {PseudoJet(stof(delimited[px]),stof(delimited[py]),
+                                           stof(delimited[pz]),stof(delimited[E])),
+                                 false,
+                                 current_vertex} );
                     }
 
                     particles.push_back(PseudoJet(stof(delimited[px]),stof(delimited[py]),
@@ -143,9 +155,13 @@ int main() {
 
         // CUT 4 -- taus must originate from same vertex //
         bool vertex_match = false;
+        bool opposite_charge = false;
         for (int i = 0; i < taus.size() - 1; i++) {     // compare all combinations of taus
             for (int j = i + 1; j < taus.size(); j++) {
-                if (taus[i][1] == taus[j][1]) vertex_match = true;
+                if (taus[i].vertex == taus[j].vertex) {
+                    vertex_match = true;
+                    if (taus[i].is_tau_plus == !taus[j].is_tau_plus) opposite_charge = true;
+                }
             }
         }
         if (!vertex_match) {
