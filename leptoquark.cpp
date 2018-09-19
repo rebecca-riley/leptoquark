@@ -4,11 +4,14 @@
 using namespace std;
 using namespace fastjet;
 
-// --------- GLOBAL FLAGS --------- //
+// --------- GLOBAL FLAGS/CONSTANTS --------- //
 // supress failure messages
-const bool SUPRESS_FAILURE_OUTPUT = true;
+const bool SUPRESS_FAILURE_OUTPUT = false;
+// indices
+const int PX = 3, PY = 4, PZ = 5, E = 6;
 
 // --------- HELPER FUNCTION DECLARATIONS --------- //
+PseudoJet get_jet(vector<string> delimited);
 void print_event(int event_number, string message, int color);
 vector<string> split_line(string line);
 
@@ -122,30 +125,16 @@ int main() {
                     }
 
                     // store all taus + vertex, charge info in Tau vector 'taus'
-                    if(delimited[pdg_code] == tau_p) {
-                        taus.push_back(
-                            Tau {PseudoJet(stof(delimited[px]),stof(delimited[py]),
-                                           stof(delimited[pz]),stof(delimited[E])),
-                                 true,
-                                 current_vertex} );
-                    }
-                    if(delimited[pdg_code] == tau_m) {
-                        taus.push_back(
-                            Tau {PseudoJet(stof(delimited[px]),stof(delimited[py]),
-                                           stof(delimited[pz]),stof(delimited[E])),
-                                 false,
-                                 current_vertex} );
-                    }
+                    if(delimited[pdg_code] == tau_p)
+                        taus.push_back( Tau{get_jet(delimited),true,current_vertex} );
+                    if(delimited[pdg_code] == tau_m)
+                        taus.push_back( Tau{get_jet(delimited),false,current_vertex});
 
-                    particles.push_back(PseudoJet(stof(delimited[px]),stof(delimited[py]),
-                                                  stof(delimited[pz]),stof(delimited[E])));
+                    particles.push_back(get_jet(delimited));
                 }
             }
-            if(line[0]=='V') {
-                vector<string> vertex_delimited = split_line(line);
-                current_vertex.reset(stof(vertex_delimited[px]),stof(vertex_delimited[py]),
-                                     stof(vertex_delimited[pz]),stof(vertex_delimited[E]));
-            }
+            if(line[0]=='V') current_vertex.reset(get_jet(split_line(line)));
+
             NextItem:
             getline(hepmc_file,line);
         } // next event reached or eof
@@ -340,6 +329,11 @@ int main() {
 
 
 // --------- HELPER FUNCTIONS --------- //
+PseudoJet get_jet(vector<string> delimited) {
+    return PseudoJet(stof(delimited[PX]),stof(delimited[PY]),
+                     stof(delimited[PZ]),stof(delimited[E]));
+}
+
 void print_event(int event_number, string message, int color = 37) {
     if (SUPRESS_FAILURE_OUTPUT) return;
     cout << "EVENT " << event_number << ": ";
