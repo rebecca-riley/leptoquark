@@ -6,7 +6,7 @@ using namespace fastjet;
 
 // --------- GLOBAL FLAGS/CONSTANTS --------- //
 // supress failure messages
-const bool SUPRESS_FAILURE_OUTPUT = false;
+const bool SUPRESS_FAILURE_OUTPUT = true;
 // indices
 const int PX = 3, PY = 4, PZ = 5, E = 6;
 
@@ -166,8 +166,6 @@ int main() {
                     if (abs(taus[i].tau.eta()) < 2.3 && abs(taus[j].tau.eta()) < 2.3)
                         eta_pass = true;
                     // cut 4 -- spatial separation
-                    cout << sqrt( pow(( taus[i].tau.phi() - taus[j].tau.phi() ),2) +
-                                  pow(( taus[i].tau.eta() - taus[j].tau.eta() ),2)) << endl;
                     if (sqrt(pow((taus[i].tau.phi() - taus[j].tau.phi()),2) +
                              pow((taus[i].tau.eta() - taus[j].tau.eta()),2)) > 0.5)
                         spatially_separated = true;
