@@ -161,31 +161,6 @@ int main() {
             continue;
         }
 
-        // CUT 2 -- taus must have pt > 50 GeV, |eta| < 2.3 //
-        bool plus_pass = false;
-        for(vector<PseudoJet>::iterator it=tau_plus.begin(); it!=tau_plus.end(); ++it) {
-            cout << "All plus: " << it->pt() << " : " << it->eta() << "\t" << endl;
-            if ((*it).pt() > 50 && abs((*it).eta()) < 2.3) plus_pass = true;
-        }
-        if (!plus_pass) {
-            num_fail++;
-            print_event(events,"failed cut 2 (pt of tau+ < 50 GeV or |eta| > 2.3)",RED);
-        }
-
-        // CUT 3 -- taus must have pt > 50 GeV, |eta| < 2.3 //
-        bool minus_pass = false;
-        for(vector<PseudoJet>::iterator it=tau_minus.begin(); it!=tau_minus.end(); ++it) {
-            cout << "All minus: " << it->pt() << " : " << it->eta() << endl;
-            if ((*it).pt() > 50 && abs((*it).eta()) < 2.3) minus_pass = true;
-        }
-        if (!minus_pass) {
-            num_fail++;
-            print_event(events,"failed cut 3 (pt of tau- < 50 GeV or |eta| > 2.3)",RED);
-        }
-
-
-
-
         // CUT 4 -- taus must originate from same vertex //
         bool vertex_match = false;
         bool opposite_charge = false;
@@ -194,9 +169,6 @@ int main() {
         for (int i = 0; i < taus.size() - 1; i++) {     // compare all combinations of taus
             for (int j = i + 1; j < taus.size(); j++) {
                 if (taus[i].vertex == taus[j].vertex) {
-                    cout << "Combo: ";
-                    cout << taus[i].tau.pt() << " : " << taus[i].tau.eta() << "\t"
-                         << taus[j].tau.pt() << " : " << taus[j].tau.eta() << endl;
                     vertex_match = true;
                     if (taus[i].is_tau_plus == !taus[j].is_tau_plus) opposite_charge = true;
                     if (taus[i].tau.pt() > 50 && taus[j].tau.pt() > 50) pt_pass = true;
