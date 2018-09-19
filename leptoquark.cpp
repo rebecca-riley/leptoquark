@@ -4,7 +4,7 @@
 using namespace std;
 using namespace fastjet;
 
-// --------- HELPER FUNCTIONS --------- //
+// --------- HELPER FUNCTION DECLARATIONS --------- //
 void print_event(int event_number, string message, int color);
 vector<string> split_line(string line);
 
@@ -25,43 +25,43 @@ vector<string> split_line(string line);
 int main() {
     // --------- CONSTANTS --------- //
     // indices
-    int barcode = 1, pdg_code = 2, px = 3, py = 4, pz = 5, E = 6, gen_mass = 7, status = 8;
-    // neutrino codes
-    string nu_e = "12", nu_mu = "14", nu_tau = "16", nu_tau_pr = "18";
-    string tau_p = "15", tau_m = "-15";
+    const int barcode = 1, pdg_code = 2, px = 3, py = 4, pz = 5, E = 6, gen_mass = 7,
+              status = 8;
+    // particle codes
+    const string nu_e = "12", nu_mu = "14", nu_tau = "16", nu_tau_pr = "18";
+    const string tau_p = "15", tau_m = "-15";
     // status flags
-    string final = "1";
-    // counters
-    int events = 0, final_state = 0, total_final_state = 0, neutrinos = 0,
-        total_neutrinos = 0, num_particles_clustered = 0;
-    int num_fail = 0;
-    // event flags
-    bool event_has_tau_p = false, event_has_tau_m = false;
+    const string final = "1";
     // jet clustering parameters
-    double R = 0.4;
-    int jet_pt_cutoff = 50;
-    // input, output file names
-    string input_filename = "ditop.hepmc",
-    jet_output_filename = "jet_output.txt",
-    w_output_filename = "w_output.txt",
-    t_output_filename = "t_output.txt";
+    const double R = 0.4;
+    const int jet_pt_cutoff = 50;
     // colors
     const int RED = 31, GREEN = 32, YELLOW = 33, BLUE = 34, PINK = 35, CYAN = 36;
-    // event vertex
-    PseudoJet current_vertex;     // bastardization of PsuedoJet to use functions
-    // helper structs
+    // input, output file names
+    const string input_filename = "ditop.hepmc",
+                 jet_output_filename = "jet_output.txt",
+                 w_output_filename = "w_output.txt",
+                 t_output_filename = "t_output.txt";
+
+    /// --------- VARIABLES --------- //
+    // global counters
+    int events = 0, num_fail = 0;
+    int total_final_state = 0, total_neutrinos = 0;
+    // event counters
+    int final_state = 0, neutrinos = 0, num_particles_clustered = 0;
+    // helper struct
     struct Tau {
         PseudoJet tau;
         bool is_tau_plus;
         PseudoJet vertex;
     };
-
-    /// --------- INITIALIZATION --------- //
-    vector<PseudoJet> particles;
-    vector<PseudoJet> tau_plus;
-    vector<PseudoJet> tau_minus;
+    // event vertex
+    PseudoJet current_vertex;     // bastardization of PsuedoJet to use functions
+    // vectors
     vector<Tau> taus;
+    vector<PseudoJet> particles;
     vector<vector<PseudoJet>> passing_events;
+    // FastJet setup
     JetDefinition jet_def(antikt_algorithm, R);
 
     // --------- FILE IO SETUP --------- //
@@ -71,6 +71,7 @@ int main() {
     jet_output.open(jet_output_filename);
     w_output.open(w_output_filename);
     t_output.open(t_output_filename);
+
 
 
     // --------- HEPMC PARSING --------- //
@@ -88,13 +89,9 @@ int main() {
         num_particles_clustered = 0;
         // -- info -- //
 
-        // reset flags, vectors
+        // reset vectors
         particles.clear();
         taus.clear();
-        tau_plus.clear();
-        tau_minus.clear();
-        event_has_tau_p = false;
-        event_has_tau_m = false;
 
         getline(hepmc_file,line);               // gets line after event or neutrino
         // cycle through lines until next event
@@ -120,10 +117,8 @@ int main() {
                         goto NextItem;
                     }
 
+                    // store all taus + vertex, charge info in Tau vector 'taus'
                     if(delimited[pdg_code] == tau_p) {
-                        event_has_tau_p = true;
-                        tau_plus.push_back(PseudoJet(stof(delimited[px]),stof(delimited[py]),
-                                           stof(delimited[pz]),stof(delimited[E])));
                         taus.push_back(
                             Tau {PseudoJet(stof(delimited[px]),stof(delimited[py]),
                                            stof(delimited[pz]),stof(delimited[E])),
@@ -131,9 +126,6 @@ int main() {
                                  current_vertex} );
                     }
                     if(delimited[pdg_code] == tau_m) {
-                        event_has_tau_m = true;
-                        tau_minus.push_back(PseudoJet(stof(delimited[px]),stof(delimited[py]),
-                                           stof(delimited[pz]),stof(delimited[E])));
                         taus.push_back(
                             Tau {PseudoJet(stof(delimited[px]),stof(delimited[py]),
                                            stof(delimited[pz]),stof(delimited[E])),
@@ -154,24 +146,28 @@ int main() {
             getline(hepmc_file,line);
         } // next event reached or eof
 
-        // CUT 1 -- final state must have two taus //
+
+        // --------- CUTS --------- //
+        // cut 1 -- at least two taus
         if (taus.size() < 2) {
             num_fail++;
             print_event(events,"failed cut 1 (lacks tau+ or tau-)",RED);
             continue;
         }
 
-        // CUT 4 -- taus must originate from same vertex //
-        bool vertex_match = false;
-        bool opposite_charge = false;
-        bool pt_pass = false;
-        bool eta_pass = false;
+        // cuts 2-4
+        bool vertex_match = false, opposite_charge = false, pt_pass = false,
+             eta_pass = false;
         for (int i = 0; i < taus.size() - 1; i++) {     // compare all combinations of taus
             for (int j = i + 1; j < taus.size(); j++) {
+                // cut 4 -- same vertex
                 if (taus[i].vertex == taus[j].vertex) {
                     vertex_match = true;
+                    // cut 4 -- opposite charge
                     if (taus[i].is_tau_plus == !taus[j].is_tau_plus) opposite_charge = true;
+                    // cut 2 -- pt > 50
                     if (taus[i].tau.pt() > 50 && taus[j].tau.pt() > 50) pt_pass = true;
+                    // cut 3 -- |eta| < 2.3
                     if (abs(taus[i].tau.eta()) < 2.3 && abs(taus[j].tau.eta()) < 2.3) eta_pass = true;
                 }
             }
@@ -183,21 +179,19 @@ int main() {
         }
         if (!opposite_charge) {
             num_fail++;
-            print_event(events,"failed cut 4 (taus must have opposite charges)",RED);
+            print_event(events,"failed cut 4 (taus have same opposite charges)",RED);
             continue;
         }
         if (!pt_pass) {
             num_fail++;
-            print_event(events,"failed cut 2 (taus must have pt > 50)",RED);
+            print_event(events,"failed cut 2 (taus have pt <= 50)",RED);
             continue;
         }
         if (!eta_pass) {
             num_fail++;
-            print_event(events,"failed cut 3 (taus must have |eta| < 2.3)",RED);
+            print_event(events,"failed cut 3 (taus have |eta| >= 2.3)",RED);
             continue;
         }
-
-
 
 
         // --------- JET CLUSTERING --------- //
@@ -340,6 +334,8 @@ int main() {
     return 0;
 }
 
+
+// --------- HELPER FUNCTIONS --------- //
 void print_event(int event_number, string message, int color = 37) {
     cout << "EVENT " << event_number << ": ";
     cout << ("\033[" + to_string(color) + "m" + message + "\033[0m") << endl;
