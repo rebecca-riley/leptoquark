@@ -58,6 +58,8 @@ int main() {
 
     /// --------- INITIALIZATION --------- //
     vector<PseudoJet> particles;
+    vector<PseudoJet> tau_plus;
+    vector<PseudoJet> tau_minus;
     vector<Tau> taus;
     vector<vector<PseudoJet>> passing_events;
     JetDefinition jet_def(antikt_algorithm, R);
@@ -89,6 +91,8 @@ int main() {
         // reset flags, vectors
         particles.clear();
         taus.clear();
+        tau_plus.clear();
+        tau_minus.clear();
         event_has_tau_p = false;
         event_has_tau_m = false;
 
@@ -118,6 +122,8 @@ int main() {
 
                     if(delimited[pdg_code] == tau_p) {
                         event_has_tau_p = true;
+                        tau_plus.push_back(PseudoJet(stof(delimited[px]),stof(delimited[py]),
+                                           stof(delimited[pz]),stof(delimited[E])));
                         taus.push_back(
                             Tau {PseudoJet(stof(delimited[px]),stof(delimited[py]),
                                            stof(delimited[pz]),stof(delimited[E])),
@@ -126,6 +132,8 @@ int main() {
                     }
                     if(delimited[pdg_code] == tau_m) {
                         event_has_tau_m = true;
+                        tau_minus.push_back(PseudoJet(stof(delimited[px]),stof(delimited[py]),
+                                           stof(delimited[pz]),stof(delimited[E])));
                         taus.push_back(
                             Tau {PseudoJet(stof(delimited[px]),stof(delimited[py]),
                                            stof(delimited[pz]),stof(delimited[E])),
@@ -147,20 +155,52 @@ int main() {
         } // next event reached or eof
 
         // CUT 1 -- final state must have two taus //
-        if (!event_has_tau_p || !event_has_tau_m) {
+        if (taus.size() < 2) {
             num_fail++;
             print_event(events,"failed cut 1 (lacks tau+ or tau-)",RED);
             continue;
         }
 
+        // CUT 2 -- taus must have pt > 50 GeV, |eta| < 2.3 //
+        bool plus_pass = false;
+        for(vector<PseudoJet>::iterator it=tau_plus.begin(); it!=tau_plus.end(); ++it) {
+            cout << "All plus: " << it->pt() << " : " << it->eta() << "\t" << endl;
+            if ((*it).pt() > 50 && abs((*it).eta()) < 2.3) plus_pass = true;
+        }
+        if (!plus_pass) {
+            num_fail++;
+            print_event(events,"failed cut 2 (pt of tau+ < 50 GeV or |eta| > 2.3)",RED);
+        }
+
+        // CUT 3 -- taus must have pt > 50 GeV, |eta| < 2.3 //
+        bool minus_pass = false;
+        for(vector<PseudoJet>::iterator it=tau_minus.begin(); it!=tau_minus.end(); ++it) {
+            cout << "All minus: " << it->pt() << " : " << it->eta() << endl;
+            if ((*it).pt() > 50 && abs((*it).eta()) < 2.3) minus_pass = true;
+        }
+        if (!minus_pass) {
+            num_fail++;
+            print_event(events,"failed cut 3 (pt of tau- < 50 GeV or |eta| > 2.3)",RED);
+        }
+
+
+
+
         // CUT 4 -- taus must originate from same vertex //
         bool vertex_match = false;
         bool opposite_charge = false;
+        bool pt_pass = false;
+        bool eta_pass = false;
         for (int i = 0; i < taus.size() - 1; i++) {     // compare all combinations of taus
             for (int j = i + 1; j < taus.size(); j++) {
                 if (taus[i].vertex == taus[j].vertex) {
+                    cout << "Combo: ";
+                    cout << taus[i].tau.pt() << " : " << taus[i].tau.eta() << "\t"
+                         << taus[j].tau.pt() << " : " << taus[j].tau.eta() << endl;
                     vertex_match = true;
                     if (taus[i].is_tau_plus == !taus[j].is_tau_plus) opposite_charge = true;
+                    if (taus[i].tau.pt() > 50 && taus[j].tau.pt() > 50) pt_pass = true;
+                    if (abs(taus[i].tau.eta()) < 2.3 && abs(taus[j].tau.eta()) < 2.3) eta_pass = true;
                 }
             }
         }
@@ -169,28 +209,23 @@ int main() {
             print_event(events,"failed cut 4 (taus originate from different vertices)",RED);
             continue;
         }
+        if (!opposite_charge) {
+            num_fail++;
+            print_event(events,"failed cut 4 (taus must have opposite charges)",RED);
+            continue;
+        }
+        if (!pt_pass) {
+            num_fail++;
+            print_event(events,"failed cut 2 (taus must have pt > 50)",RED);
+            continue;
+        }
+        if (!eta_pass) {
+            num_fail++;
+            print_event(events,"failed cut 3 (taus must have |eta| < 2.3)",RED);
+            continue;
+        }
 
-        // // CUT 2 -- taus must have pt > 50 GeV, |eta| < 2.3 //
-        // bool plus_pass = false;
-        // for(vector<PseudoJet>::iterator it=tau_plus.begin(); it!=tau_plus.end(); ++it) {
-        //     if ((*it).pt() > 50 && abs((*it).eta()) < 2.3) plus_pass = true;
-        // }
-        // if (!plus_pass) {
-        //     num_fail++;
-        //     print_event(events,"failed cut 2 (pt of tau+ < 50 GeV or |eta| > 2.3)",RED);
-        //     continue;
-        // }
 
-        // // CUT 3 -- taus must have pt > 50 GeV, |eta| < 2.3 //
-        // bool minus_pass = false;
-        // for(vector<PseudoJet>::iterator it=tau_plus.begin(); it!=tau_plus.end(); ++it) {
-        //     if ((*it).pt() > 50 && abs((*it).eta()) < 2.3) minus_pass = true;
-        // }
-        // if (!minus_pass) {
-        //     num_fail++;
-        //     print_event(events,"failed cut 3 (pt of tau- < 50 GeV or |eta| > 2.3)",RED);
-        //     continue;
-        // }
 
 
         // --------- JET CLUSTERING --------- //
