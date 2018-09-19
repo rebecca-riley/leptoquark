@@ -6,6 +6,7 @@ using namespace fastjet;
 
 // --------- HELPER FUNCTIONS --------- //
 void print_event(int event_number, string message, int color);
+vector<string> split_line(string line);
 
 // --------- CUT LIST --------- //
 // (1) select final state with two taus and two b-jets
@@ -24,7 +25,7 @@ void print_event(int event_number, string message, int color);
 int main() {
     // --------- CONSTANTS --------- //
     // indices
-    int pdg_code = 2, px = 3, py = 4, pz = 5, E = 6, gen_mass = 7, status = 8;
+    int barcode = 1, pdg_code = 2, px = 3, py = 4, pz = 5, E = 6, gen_mass = 7, status = 8;
     // neutrino codes
     string nu_e = "12", nu_mu = "14", nu_tau = "16", nu_tau_pr = "18";
     string tau_p = "15", tau_m = "-15";
@@ -46,11 +47,13 @@ int main() {
     t_output_filename = "t_output.txt";
     // colors
     const int RED = 31, GREEN = 32, YELLOW = 33, BLUE = 34, PINK = 35, CYAN = 36;
+    // event vertex
+    PseudoJet current_vertex;     // bastardization of PsuedoJet to use functions
 
     /// --------- INITIALIZATION --------- //
     vector<PseudoJet> particles;
-    vector<PseudoJet> tau_plus;
-    vector<PseudoJet> tau_minus;
+    vector<vector<PseudoJet>> tau_plus;
+    vector<vector<PseudoJet>> tau_minus;
     vector<vector<PseudoJet>> passing_events;
     JetDefinition jet_def(antikt_algorithm, R);
 
@@ -89,9 +92,7 @@ int main() {
         // cycle through lines until next event
         while(!hepmc_file.eof() && line[0]!='E') {
             if(line[0]=='P'){                       // only want particles
-                // delimit line by space; results go into string vector 'delimited'
-                istringstream iss(line);
-                vector<string> delimited((istream_iterator<string>(iss)),istream_iterator<string>());
+                vector<string> delimited = split_line(line);
 
                 // only want non-neutrino, final state particles
                 // push candidates onto PseudoJet vector 'particles'
@@ -113,18 +114,23 @@ int main() {
 
                     if(delimited[pdg_code] == tau_p) {
                         event_has_tau_p = true;
-                        tau_plus.push_back(PseudoJet(stof(delimited[px]),stof(delimited[py]),
-                                                 stof(delimited[pz]),stof(delimited[E])));
+                        tau_plus.push_back(vector<PseudoJet> {PseudoJet(stof(delimited[px]),stof(delimited[py]),
+                                                 stof(delimited[pz]),stof(delimited[E])),current_vertex} );
                     }
                     if(delimited[pdg_code] == tau_m) {
                         event_has_tau_m = true;
-                        tau_minus.push_back(PseudoJet(stof(delimited[px]),stof(delimited[py]),
-                                                 stof(delimited[pz]),stof(delimited[E])));
+                        tau_minus.push_back(vector<PseudoJet> {PseudoJet(stof(delimited[px]),stof(delimited[py]),
+                                                 stof(delimited[pz]),stof(delimited[E])),current_vertex} );
                     }
 
                     particles.push_back(PseudoJet(stof(delimited[px]),stof(delimited[py]),
                                                   stof(delimited[pz]),stof(delimited[E])));
                 }
+            }
+            if(line[0]=='V') {
+                vector<string> vertex_delimited = split_line(line);
+                current_vertex.reset(stof(vertex_delimited[px]),stof(vertex_delimited[py]),
+                                     stof(vertex_delimited[pz]),stof(vertex_delimited[E]));
             }
             NextItem:
             getline(hepmc_file,line);
@@ -137,28 +143,36 @@ int main() {
             continue;
         }
 
-        // CUT 2 -- taus must have pt > 50 GeV, |eta| < 2.3 //
-        bool plus_pass = false;
-        for(vector<PseudoJet>::iterator it=tau_plus.begin(); it!=tau_plus.end(); ++it) {
-            if ((*it).pt() > 50 && abs((*it).eta()) < 2.3) plus_pass = true;
-
-        }
-        if (!plus_pass) {
-            num_fail++;
-            print_event(events,"failed cut 2 (pt of tau+ < 50 GeV or |eta| > 2.3)",RED);
-            continue;
+        // CUT 4 -- taus must originate from same vertex //
+        for(vector<vector<PseudoJet>>::iterator it=tau_plus.begin(); it!=tau_plus.end(); ++it) {
+            cout << "particle: " << (*it)[0].px() << "\tvertex: " << (*it)[1].px() << endl;
         }
 
-        // CUT 3 -- taus must have pt > 50 GeV, |eta| < 2.3 //
-        bool minus_pass = false;
-        for(vector<PseudoJet>::iterator it=tau_plus.begin(); it!=tau_plus.end(); ++it) {
-            if ((*it).pt() > 50 && abs((*it).eta()) < 2.3) minus_pass = true;
+        for(vector<vector<PseudoJet>>::iterator it=tau_minus.begin(); it!=tau_minus.end(); ++it) {
+            cout << "particle: " << (*it)[0].px() << "\tvertex: " << (*it)[1].px() << endl;
         }
-        if (!minus_pass) {
-            num_fail++;
-            print_event(events,"failed cut 3 (pt of tau- < 50 GeV or |eta| > 2.3)",RED);
-            continue;
-        }
+
+        // // CUT 2 -- taus must have pt > 50 GeV, |eta| < 2.3 //
+        // bool plus_pass = false;
+        // for(vector<PseudoJet>::iterator it=tau_plus.begin(); it!=tau_plus.end(); ++it) {
+        //     if ((*it).pt() > 50 && abs((*it).eta()) < 2.3) plus_pass = true;
+        // }
+        // if (!plus_pass) {
+        //     num_fail++;
+        //     print_event(events,"failed cut 2 (pt of tau+ < 50 GeV or |eta| > 2.3)",RED);
+        //     continue;
+        // }
+
+        // // CUT 3 -- taus must have pt > 50 GeV, |eta| < 2.3 //
+        // bool minus_pass = false;
+        // for(vector<PseudoJet>::iterator it=tau_plus.begin(); it!=tau_plus.end(); ++it) {
+        //     if ((*it).pt() > 50 && abs((*it).eta()) < 2.3) minus_pass = true;
+        // }
+        // if (!minus_pass) {
+        //     num_fail++;
+        //     print_event(events,"failed cut 3 (pt of tau- < 50 GeV or |eta| > 2.3)",RED);
+        //     continue;
+        // }
 
 
         // --------- JET CLUSTERING --------- //
@@ -304,4 +318,9 @@ int main() {
 void print_event(int event_number, string message, int color = 37) {
     cout << "EVENT " << event_number << ": ";
     cout << ("\033[" + to_string(color) + "m" + message + "\033[0m") << endl;
+}
+
+vector<string> split_line(string line) {
+    istringstream iss(line);
+    return vector<string>((istream_iterator<string>(iss)),istream_iterator<string>());
 }
