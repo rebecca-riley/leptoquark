@@ -214,7 +214,13 @@ int main() {
         // if (events>5) continue;  // DEBUG -- run jet analysis for specific events
 
         ClusterSequence cs(particles, jet_def);
+        // cut 5 -- pt_jet > 50
         vector<PseudoJet> jets = sorted_by_pt(cs.inclusive_jets(jet_pt_cutoff));
+
+        // cut 5 -- |eta_jet| < 2.4
+        for (unsigned i = 0; i < jets.size(); i++) {
+            if (abs(jets[i].eta()) >= 2.4) jets.erase(jets.begin()+i);
+        }
 
         // -- info -- //
         // write jets for event to jet_output
