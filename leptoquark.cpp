@@ -217,9 +217,12 @@ int main() {
         // cut 5 -- pt_jet > 50
         vector<PseudoJet> jets = sorted_by_pt(cs.inclusive_jets(jet_pt_cutoff));
 
-        // cut 5 -- |eta_jet| < 2.4
+        // cut 5 -- |eta_jet| < 2.4, spatial separation from taus > 0.5
         for (unsigned i = 0; i < jets.size(); i++) {
-            if (abs(jets[i].eta()) >= 2.4) jets.erase(jets.begin()+i);
+            if (    abs(jets[i].eta()) >= 2.4 ||
+                    get_spatial_separation(jets[i],tau_candidates[0]) <= 0.5 ||
+                    get_spatial_separation(jets[i],tau_candidates[1]) <= 0.5    )
+                jets.erase(jets.begin()+i);
         }
 
         // -- info -- //
