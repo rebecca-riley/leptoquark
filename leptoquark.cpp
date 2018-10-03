@@ -58,7 +58,7 @@ int main() {
     int events = 0, num_fail = 0;
     int total_final_state = 0, total_neutrinos = 0;
     // event counters
-    int final_state = 0, neutrinos = 0, num_particles_clustered = 0;
+    int final_state = 0, neutrinos = 0, taus = 0, num_particles_clustered = 0;
     // helper struct
     struct Tau {
         PseudoJet tau;
@@ -66,10 +66,10 @@ int main() {
         PseudoJet vertex;
     };
     // event vertex
-    PseudoJet current_vertex;     // bastardization of PsuedoJet to use functions
+    PseudoJet current_vertex;     // bastardization of PseudoJet to use functions
     // vectors
-    vector<Tau> taus;
-    vector<PseudoJet> bs;
+    vector<Tau> vec_taus;
+    vector<PseudoJet> vec_bs;
     PseudoJet tau_candidates[2];
     vector<PseudoJet> particles;
     vector<vector<PseudoJet>> passing_events;
@@ -98,13 +98,14 @@ int main() {
         events += 1;
         final_state = 0;
         neutrinos = 0;
+        taus = 0;
         num_particles_clustered = 0;
         // -- info -- //
 
         // reset vectors
         particles.clear();
-        taus.clear();
-        bs.clear();
+        vec_taus.clear();
+        vec_bs.clear();
         tau_candidates[0] = null_jet; tau_candidates[1] = null_jet;
 
         getline(hepmc_file,line);               // gets line after event or neutrino
@@ -131,18 +132,20 @@ int main() {
                         goto NextItem;
                     }
 
-                    // store all taus + vertex, charge info in Tau vector 'taus'
+                    // store all taus + vertex, charge info in Tau vector 'vec_taus'
                     if(delimited[pdg_code] == tau_p) {
-                        taus.push_back( Tau{get_jet(delimited),true,current_vertex} );
-                        // goto NextItem;
+                        vec_taus.push_back( Tau{get_jet(delimited),true,current_vertex} );
+                        taus += 1;
+                        goto NextItem;
                     }
                     if(delimited[pdg_code] == tau_m) {
-                        taus.push_back( Tau{get_jet(delimited),false,current_vertex});
-                        // goto NextItem;
+                        vec_taus.push_back( Tau{get_jet(delimited),false,current_vertex});
+                        taus += 1;
+                        goto NextItem;
                     }
 
                     if(delimited[pdg_code] == b_p || delimited[pdg_code] == b_m)
-                        bs.push_back(get_jet(delimited));
+                        vec_bs.push_back(get_jet(delimited));
 
                     particles.push_back(get_jet(delimited));
                 }
@@ -156,7 +159,7 @@ int main() {
 
         // --------- CUTS ON TAUS --------- //
         // cut 1 -- at least two taus
-        if (taus.size() < 2) {
+        if (vec_taus.size() < 2) {
             num_fail++;
             print_event(events,"failed cut 1 (lacks tau+ or tau-)",RED);
             continue;
@@ -165,27 +168,27 @@ int main() {
         // cuts 2-4
         bool vertex_match = false, opposite_charge = false, pt_pass = false,
              eta_pass = false, spatially_separated = false;
-        for (int i = 0; i < taus.size() - 1; i++) {     // compare all combinations of taus
-            for (int j = i + 1; j < taus.size(); j++) {
+        for (int i = 0; i < vec_taus.size() - 1; i++) {     // compare all combinations of taus
+            for (int j = i + 1; j < vec_taus.size(); j++) {
                 // cut 4 -- same vertex
-                if (taus[i].vertex == taus[j].vertex) {
+                if (vec_taus[i].vertex == vec_taus[j].vertex) {
                     vertex_match = true;
                     // cut 4 -- opposite charge
-                    if (taus[i].is_tau_plus == !taus[j].is_tau_plus)
+                    if (vec_taus[i].is_tau_plus == !vec_taus[j].is_tau_plus)
                         opposite_charge = true;
                     // cut 2 -- pt > 50
-                    if (taus[i].tau.pt() > 50 && taus[j].tau.pt() > 50)
+                    if (vec_taus[i].tau.pt() > 50 && vec_taus[j].tau.pt() > 50)
                         pt_pass = true;
                     // cut 3 -- |eta| < 2.3
-                    if (abs(taus[i].tau.eta()) < 2.3 && abs(taus[j].tau.eta()) < 2.3)
+                    if (abs(vec_taus[i].tau.eta()) < 2.3 && abs(vec_taus[j].tau.eta()) < 2.3)
                         eta_pass = true;
                     // cut 4 -- spatial separation
-                    if (get_spatial_separation(taus[i].tau,taus[j].tau) > 0.5)
+                    if (get_spatial_separation(vec_taus[i].tau,vec_taus[j].tau) > 0.5)
                         spatially_separated = true;
 
                     // usable taus go on array tau_candidates
-                    tau_candidates[0] = taus[i].tau;
-                    tau_candidates[1] = taus[j].tau;
+                    tau_candidates[0] = vec_taus[i].tau;
+                    tau_candidates[1] = vec_taus[j].tau;
                 }
             }
         }
@@ -260,7 +263,7 @@ int main() {
 
         // verify that all particles were clustered; track progress in terminal
         cout << "EVENT " << events << ": ";
-        if (num_particles_clustered == final_state - neutrinos) {
+        if (num_particles_clustered == final_state - neutrinos - taus) {
             cout << "\033[32mALL PARTICLES CLUSTERED\033[0m ("
                  << num_particles_clustered << ")" << endl;
             // jet_output << "ALL PARTICLES CLUSTERED" << endl;
