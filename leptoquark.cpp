@@ -37,7 +37,7 @@ int main() {
               status = 8;
     // particle codes
     const string nu_e = "12", nu_mu = "14", nu_tau = "16", nu_tau_pr = "18";
-    const string tau_p = "15", tau_m = "-15";
+    const string tau_p = "15", tau_m = "-15", b_p = "5", b_m = "-5";
     // status flags
     const string final = "1";
     // jet clustering parameters
@@ -69,6 +69,7 @@ int main() {
     PseudoJet current_vertex;     // bastardization of PsuedoJet to use functions
     // vectors
     vector<Tau> taus;
+    vector<PseudoJet> bs;
     PseudoJet tau_candidates[2];
     vector<PseudoJet> particles;
     vector<vector<PseudoJet>> passing_events;
@@ -103,6 +104,7 @@ int main() {
         // reset vectors
         particles.clear();
         taus.clear();
+        bs.clear();
         tau_candidates[0] = null_jet; tau_candidates[1] = null_jet;
 
         getline(hepmc_file,line);               // gets line after event or neutrino
@@ -132,12 +134,15 @@ int main() {
                     // store all taus + vertex, charge info in Tau vector 'taus'
                     if(delimited[pdg_code] == tau_p) {
                         taus.push_back( Tau{get_jet(delimited),true,current_vertex} );
-                        goto NextItem;
+                        // goto NextItem;
                     }
                     if(delimited[pdg_code] == tau_m) {
                         taus.push_back( Tau{get_jet(delimited),false,current_vertex});
-                        goto NextItem;
+                        // goto NextItem;
                     }
+
+                    if(delimited[pdg_code] == b_p || delimited[pdg_code] == b_m)
+                        bs.push_back(get_jet(delimited));
 
                     particles.push_back(get_jet(delimited));
                 }
