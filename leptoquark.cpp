@@ -48,7 +48,7 @@ int main() {
     // colors
     const int RED = 31, GREEN = 32, YELLOW = 33, BLUE = 34, PINK = 35, CYAN = 36;
     // input, output file names
-    const string input_filename = "ditop.hepmc",
+    const string input_filename = "ditop_experiment4.hepmc",
                  jet_output_filename = "jet_output.txt",
                  w_output_filename = "w_output.txt",
                  t_output_filename = "t_output.txt";
@@ -130,10 +130,14 @@ int main() {
                     }
 
                     // store all taus + vertex, charge info in Tau vector 'taus'
-                    if(delimited[pdg_code] == tau_p)
+                    if(delimited[pdg_code] == tau_p) {
                         taus.push_back( Tau{get_jet(delimited),true,current_vertex} );
-                    if(delimited[pdg_code] == tau_m)
+                        goto NextItem;
+                    }
+                    if(delimited[pdg_code] == tau_m) {
                         taus.push_back( Tau{get_jet(delimited),false,current_vertex});
+                        goto NextItem;
+                    }
 
                     particles.push_back(get_jet(delimited));
                 }
