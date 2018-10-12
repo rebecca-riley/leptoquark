@@ -70,7 +70,6 @@ int main() {
     PseudoJet current_vertex;     // bastardization of PseudoJet to use functions
     // vectors
     vector<Tau> vec_taus;
-    vector<PseudoJet> vec_bs;
     PseudoJet tau_candidates[2];
     vector<PseudoJet> particles;
     vector<vector<PseudoJet>> passing_events;
@@ -106,7 +105,6 @@ int main() {
         // reset vectors
         particles.clear();
         vec_taus.clear();
-        vec_bs.clear();
         tau_candidates[0] = null_jet; tau_candidates[1] = null_jet;
 
         getline(hepmc_file,line);               // gets line after event or neutrino
@@ -146,7 +144,6 @@ int main() {
                     }
 
                     if(delimited[pdg_code] == b_p || delimited[pdg_code] == b_m) {
-                        vec_bs.push_back(get_jet(delimited));
                         PseudoJet b = get_jet(delimited);
                         b.set_user_index(1);
                         particles.push_back(b);
