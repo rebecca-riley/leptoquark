@@ -290,6 +290,15 @@ int main() {
             }
         }
 
+        // cut 8 -- at least one tau, b pair has inv. mass > 250 GeV
+        if ( (min_pairs.jet[0] + min_pairs.tau[0].tau).m() <= 250 &&
+             (min_pairs.jet[1] + min_pairs.tau[1].tau).m() <= 250 ) {
+            num_fail++;
+            print_event(events,"failed cut 8: both tau + b jets have inv. mass < 250 GeV",
+                        RED);
+            continue;
+        }
+
         // -- info -- //
         // write jets for event to jet_output
         // jet_output << "EVENT " << events
