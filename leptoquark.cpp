@@ -15,6 +15,7 @@ PseudoJet get_jet(vector<string> delimited);
 double get_spatial_separation(PseudoJet jet1, PseudoJet jet2);
 void print_event(int event_number, string message, int color);
 vector<string> split_line(string line);
+void print_jet(PseudoJet jet, string identifier = "");
 
 // --------- CUT LIST --------- //
 // (1) select final state with two taus and two b-jets
@@ -396,4 +397,21 @@ void print_event(int event_number, string message, int color = 37) {
 vector<string> split_line(string line) {
     istringstream iss(line);
     return vector<string>((istream_iterator<string>(iss)),istream_iterator<string>());
+}
+
+void print_jet(PseudoJet jet, string identifier) {
+    int buffer = 15;
+    string print = identifier;
+    print.resize(buffer/2, ' ');
+    string temp = "";
+    for (int i = 0; i < 4; i++) {
+        temp = to_string(jet[i]);
+        if (temp[0] != '-') {
+            print += ' ';
+            temp.resize(buffer-1, ' ');
+        }
+        else temp.resize(buffer, ' ');
+        print += temp;
+    }
+    cout << print << endl;
 }
