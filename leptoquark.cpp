@@ -145,10 +145,13 @@ int main() {
                         goto NextItem;
                     }
 
-                    if(delimited[pdg_code] == b_p || delimited[pdg_code] == b_m)
+                    if(delimited[pdg_code] == b_p || delimited[pdg_code] == b_m) {
                         vec_bs.push_back(get_jet(delimited));
-
-                    particles.push_back(get_jet(delimited));
+                        PseudoJet b = get_jet(delimited);
+                        b.set_user_index(1);
+                        particles.push_back(b);
+                    }
+                    else particles.push_back(get_jet(delimited));
                 }
             }
             if(line[0]=='V') current_vertex.reset(get_jet(split_line(line)));
@@ -245,6 +248,27 @@ int main() {
                                 "eta, separation cuts",RED);
             continue;
         }
+
+        // cut 6 -- at least two jets contain b's
+        int num_jets_with_b = 0;
+        for (int i = 0; i < jets.size(); i++) {
+            vector<PseudoJet> constits = jets[i].constituents();
+            bool has_b = false;
+            for (int j = 0; j < constits.size(); j++) {
+                if (constits[j].user_index() == 1) {
+                    has_b = true;
+                    num_jets_with_b++;
+                    break;
+                }
+            }
+        }
+
+        if (num_jets_with_b < 2) {
+            num_fail++;
+            print_event(events,"failed cut 6: less than two jets containing b's",RED);
+            continue;
+        }
+
 
         // -- info -- //
         // write jets for event to jet_output
