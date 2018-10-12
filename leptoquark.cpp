@@ -49,7 +49,7 @@ int main() {
     // colors
     const int RED = 31, GREEN = 32, YELLOW = 33, BLUE = 34, PINK = 35, CYAN = 36;
     // input, output file names
-    const string input_filename = "ditop_10k.hepmc",
+    const string input_filename = "ditop_experiment4.hepmc",
                  jet_output_filename = "jet_output.txt",
                  w_output_filename = "w_output.txt",
                  t_output_filename = "t_output.txt";
@@ -266,6 +266,29 @@ int main() {
             continue;
         }
 
+        // cut 7 -- select tau, b pair that minimizes mass difference
+        double min_diff = 10000000000000;       // very large number -- will be reset
+        struct {                                // immediately by first mass_diff
+            PseudoJet jet[2];
+            Tau tau[2];
+        } min_pairs;
+
+        for (int i = 0; i < jets.size(); i++) {
+            for (int j = 0; j < vec_taus.size(); j++) {
+                PseudoJet combo1 = jets[i] + vec_taus[j].tau;
+                PseudoJet combo2 = jets[(i+1)%jets.size()]
+                                 + vec_taus[(j+1)%vec_taus.size()].tau;
+                double mass_diff = abs(combo1.m() - combo2.m());
+
+                if (mass_diff < min_diff){
+                    min_diff = mass_diff;
+                    min_pairs.jet[0] = jets[i];
+                    min_pairs.jet[1] = jets[(i+1)%jets.size()];
+                    min_pairs.tau[0] = vec_taus[j];
+                    min_pairs.tau[1] = vec_taus[(j+1)%vec_taus.size()];
+                }
+            }
+        }
 
         // -- info -- //
         // write jets for event to jet_output
