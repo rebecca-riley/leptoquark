@@ -49,7 +49,7 @@ int main() {
     // colors
     const int RED = 31, GREEN = 32, YELLOW = 33, BLUE = 34, PINK = 35, CYAN = 36;
     // input, output file names
-    const string input_filename = "ditop_experiment4.hepmc",
+    const string input_filename = "ditop_10k.hepmc",
                  jet_output_filename = "jet_output.txt",
                  w_output_filename = "w_output.txt",
                  t_output_filename = "t_output.txt";
@@ -260,9 +260,9 @@ int main() {
             }
         }
 
-        if (num_jets_with_b < 2) {
+        if (num_jets_with_b < 1) {
             num_fail++;
-            print_event(events,"failed cut 6: less than two jets containing b's",RED);
+            print_event(events,"failed cut 6: no jets containing b's",RED);
             continue;
         }
 
