@@ -456,7 +456,7 @@ void print_jet(PseudoJet jet, string identifier) {
 
 void _print_event(int event_number, string message, int color_message,
                   string other_info, int color_other_info) {
-    cout << "EVENT " << event_number << ": ";
+    cout << "EVENT " << event_number << ":\t";
     cout << ("\033[" + to_string(color_message) + "m" + message + "\033[0m")
          << ("\033[" + to_string(color_other_info) + "m" + other_info + "\033[0m")
          << endl;
