@@ -5,10 +5,12 @@ using namespace std;
 using namespace fastjet;
 
 // --------- GLOBAL FLAGS/CONSTANTS --------- //
-// supress failure messages
+// don't print failed events to terminal
 const bool SUPRESS_FAILURE_OUTPUT = true;
 // write log to file
 const bool WRITE_TO_FILE = true;
+// keep count of how many final state particles, neutrinos, etc.
+const bool OPTIMIZATION_OFF = false;
 // indices
 const int PX = 3, PY = 4, PZ = 5, E = 6;
 // colors
@@ -97,14 +99,12 @@ int main() {
     }
 
     while(!hepmc_file.eof()) {
-        // -- info -- //
         events += 1;
+        // -- counters -- //
         final_state = 0;
         neutrinos = 0;
         taus = 0;
         num_particles_clustered = 0;
-        // -- info -- //
-
         // reset vectors
         particles.clear();
         vec_taus.clear();
@@ -119,19 +119,17 @@ int main() {
                 // only want non-neutrino, final state particles
                 // push candidates onto PseudoJet vector 'particles'
                 if(delimited[status]==final) {
-                    // -- info -- //
-                    final_state += 1;               // count all final state particles
-                    total_final_state += 1;
-                    // -- info -- //
+                    // -- counters -- //
+                    final_state += 1;
+                    if (OPTIMIZATION_OFF) total_final_state += 1;
 
                     if(delimited[pdg_code] == nu_e || delimited[pdg_code] == nu_mu ||
                        delimited[pdg_code] == nu_tau || delimited[pdg_code] == nu_tau_pr)
-                    {                               // don't store neutrinos
-                        // -- info -- //
+                    {
+                        // -- counters -- //
                         neutrinos += 1;
-                        total_neutrinos += 1;
-                        // -- info -- //
-                        goto NextItem;
+                        if (OPTIMIZATION_OFF) total_neutrinos += 1;
+                        goto NextItem;              // don't store neutrinos
                     }
 
                     // store all taus + vertex, charge info in Tau vector 'vec_taus'
@@ -389,16 +387,20 @@ int main() {
 
     // --------- FINAL STATUS INFO --------- //
     cout << "Number of events processed: " << events << endl;
-    cout << "Number of final state particles: " << total_final_state << endl;
-    cout << "Number of final state neutrinos: " << total_neutrinos << endl;
     cout << "Number of events passing cuts: " << (events - num_fail) << endl;
     cout << "Percent pass: " << (((events - num_fail))/double(events)*100) << endl;
-
+    if (OPTIMIZATION_OFF) {
+        cout << "Number of final state particles: " << total_final_state << endl;
+        cout << "Number of final state neutrinos: " << total_neutrinos << endl;
+    }
     if (WRITE_TO_FILE) {
         jet_output << "Number of events processed: " << events << endl;
-        jet_output << "Number of final state particles: " << total_final_state << endl;
-        jet_output << "Number of final state neutrinos: " << total_neutrinos << endl;
-
+        jet_output << "Number of events passing cuts: " << (events - num_fail) << endl;
+        jet_output << "Percent pass: " << (((events - num_fail))/double(events)*100) << endl;
+        if (OPTIMIZATION_OFF) {
+            jet_output << "Number of final state particles: " << total_final_state << endl;
+            jet_output << "Number of final state neutrinos: " << total_neutrinos << endl;
+        }
         cout << "Jet information written to " << jet_output_filename << endl;
     }
 
