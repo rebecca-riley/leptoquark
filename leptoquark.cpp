@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iterator>
+#include <chrono>
 #include "fastjet/ClusterSequence.hh"
 using namespace std;
 using namespace fastjet;
@@ -47,6 +48,9 @@ double get_spatial_separation(PseudoJet jet1, PseudoJet jet2);
 
 
 int main() {
+    // --------- RUNTIME --------- //
+    auto start = std::chrono::high_resolution_clock::now();
+
     // --------- CONSTANTS --------- //
     // input, output file names
     const string input_filename = "ditop_experiment4.hepmc",
@@ -402,6 +406,11 @@ int main() {
         }
     }
 
+    // --------- RUNTIME --------- //
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = finish - start;
+    cout << "Runtime: " << elapsed.count() << endl;
+    if (WRITE_TO_FILE) runlog << "Runtime: " << elapsed.count() << endl;
 
     // --------- CLEANUP --------- //
     hepmc_file.close();
