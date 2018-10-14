@@ -12,7 +12,8 @@ const bool WRITE_TO_FILE = true;
 ofstream runlog;
 // true = don't print failed events to terminal or output file
 const bool SUPRESS_FAILURE_OUTPUT = true;
-// true = keep count of how many final state particles, neutrinos, etc.
+// true = keep count of how many final state particles/neutrinos, check for all
+//        particles clustered, etc.
 const bool OPTIMIZATION_OFF = false;
 // indices
 const int PX = 3, PY = 4, PZ = 5, E = 6;
@@ -298,17 +299,20 @@ int main() {
 
 
         // --------- EVENT PROCESSING OUTPUT --------- //
-        // find total number of particles clustered
-        vector<PseudoJet> all_jets = cs.inclusive_jets();
-        for (unsigned i = 0; i < all_jets.size(); i++) {
-            num_particles_clustered += all_jets[i].constituents().size();
-        }
+        if (OPTIMIZATION_OFF) {
+            // find total number of particles clustered
+            vector<PseudoJet> all_jets = cs.inclusive_jets();
+            for (unsigned i = 0; i < all_jets.size(); i++) {
+                num_particles_clustered += all_jets[i].constituents().size();
+            }
 
-        // verify that all particles were clustered; track progress in terminal
-        if (num_particles_clustered == final_state - neutrinos - taus)
-            print_success(events,"ALL PARTICLES CLUSTERED",
-                          " ("+ to_string(num_particles_clustered) + ")");
-        else print_warning(events,"NOT ALL PARTICLES CLUSTERED");
+            // verify that all particles were clustered; track progress in terminal
+            if (num_particles_clustered == final_state - neutrinos - taus)
+                print_success(events,"ALL PARTICLES CLUSTERED",
+                              " ("+ to_string(num_particles_clustered) + ")");
+            else print_warning(events,"NOT ALL PARTICLES CLUSTERED");
+        }
+        else print_success(events, "PASS");
 
 
         // --------- RECOMBINATORICS COMMENTED OUT FOR TIME BEING --------- //
