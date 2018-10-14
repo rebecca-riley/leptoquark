@@ -11,11 +11,18 @@ const bool SUPRESS_FAILURE_OUTPUT = true;
 const bool WRITE_TO_FILE = true;
 // indices
 const int PX = 3, PY = 4, PZ = 5, E = 6;
+// colors
+const int RED = 31, GREEN = 32, YELLOW = 33, BLUE = 34, PINK = 35, CYAN = 36, GREY = 37;
 
 // --------- HELPER FUNCTION DECLARATIONS --------- //
 PseudoJet get_jet(vector<string> delimited);
 void print_jet(PseudoJet jet, string identifier = "");
-void print_event(int event_number, string message, int color);
+void _print_event(int event_number, string message, int color_message = GREY,
+                  string other_info = "", int color_other_info = GREY);
+void print_success(int event_number, string message, string other_info = "",
+                   int color_message = GREEN, int color_other_info = GREY);
+void print_error(int event_number, string message, int color = RED);
+void print_warning(int event_number, string message, int color = PINK);
 vector<string> split_line(string line);
 double get_spatial_separation(PseudoJet jet1, PseudoJet jet2);
 
@@ -53,8 +60,6 @@ int main() {
     const int jet_pt_cutoff = 50;
     // null jet
     const PseudoJet null_jet = PseudoJet(0,0,0,0);
-    // colors
-    const int RED = 31, GREEN = 32, YELLOW = 33, BLUE = 34, PINK = 35, CYAN = 36;
 
 
     /// --------- VARIABLES --------- //
@@ -165,7 +170,7 @@ int main() {
         // cut 1 -- at least two taus
         if (vec_taus.size() < 2) {
             num_fail++;
-            print_event(events,"failed cut 1 (lacks tau+ or tau-)",RED);
+            print_error(events,"failed cut 1 (lacks tau+ or tau-)");
             continue;
         }
 
@@ -198,27 +203,27 @@ int main() {
         }
         if (!vertex_match) {
             num_fail++;
-            print_event(events,"failed cut 4 (taus originate from different vertices)",RED);
+            print_error(events,"failed cut 4 (taus originate from different vertices)");
             continue;
         }
         if (!opposite_charge) {
             num_fail++;
-            print_event(events,"failed cut 4 (taus have same opposite charges)",RED);
+            print_error(events,"failed cut 4 (taus have same opposite charges)");
             continue;
         }
         if (!pt_pass) {
             num_fail++;
-            print_event(events,"failed cut 2 (taus have pt <= 50)",RED);
+            print_error(events,"failed cut 2 (taus have pt <= 50)");
             continue;
         }
         if (!eta_pass) {
             num_fail++;
-            print_event(events,"failed cut 3 (taus have |eta| >= 2.3)",RED);
+            print_error(events,"failed cut 3 (taus have |eta| >= 2.3)");
             continue;
         }
         if (!spatially_separated) {
             num_fail++;
-            print_event(events,"failed cut 4 (taus have separation <= 0.5)",RED);
+            print_error(events,"failed cut 4 (taus have separation <= 0.5)");
             continue;
         }
 
@@ -244,8 +249,8 @@ int main() {
         // cut 5 -- at least two jets must remain for possible b-tagging
         if (jets.size() < 2) {
             num_fail++;
-            print_event(events,"failed cut 5: less than two jets remaining after"
-                                "eta, separation cuts",RED);
+            print_error(events,"failed cut 5: less than two jets remaining after"
+                                "eta, separation cuts");
             continue;
         }
 
@@ -265,7 +270,7 @@ int main() {
 
         if (num_jets_with_b < 1) {
             num_fail++;
-            print_event(events,"failed cut 6: no jets containing b's",RED);
+            print_error(events,"failed cut 6: no jets containing b's");
             continue;
         }
 
@@ -297,8 +302,7 @@ int main() {
         if ( (min_pairs.jet[0] + min_pairs.tau[0].tau).m() <= 250 &&
              (min_pairs.jet[1] + min_pairs.tau[1].tau).m() <= 250 ) {
             num_fail++;
-            print_event(events,"failed cut 8: both tau + b jets have inv. mass < 250 GeV",
-                        RED);
+            print_error(events,"failed cut 8: both tau + b jets have inv. mass < 250 GeV");
             continue;
         }
 
@@ -310,19 +314,16 @@ int main() {
         }
 
         // verify that all particles were clustered; track progress in terminal
-        cout << "EVENT " << events << ": ";
         if (WRITE_TO_FILE) jet_output << "EVENT " << events << ": ";
         if (num_particles_clustered == final_state - neutrinos - taus) {
-            cout << "\033[32mALL PARTICLES CLUSTERED\033[0m ("
-                 << num_particles_clustered << ")" << endl;
+            print_success(events,"ALL PARTICLES CLUSTERED",
+                          " ("+ to_string(num_particles_clustered) + ")");
             if (WRITE_TO_FILE) jet_output << "ALL PARTICLES CLUSTERED ("
                                           << num_particles_clustered << ")" << endl;
         }
         else {
-            cout << "\033[31mNOT ALL PARTICLES CLUSTERED\033[0m ("
-                 << num_particles_clustered << ")" << endl;
-            if (WRITE_TO_FILE) jet_output << "NOT ALL PARTICLES CLUSTERED ("
-                                          << num_particles_clustered << ")" << endl;
+            print_warning(events,"NOT ALL PARTICLES CLUSTERED");
+            if (WRITE_TO_FILE) jet_output << "NOT ALL PARTICLES CLUSTERED" << endl;
         }
         // -- info -- //
 
@@ -453,14 +454,27 @@ void print_jet(PseudoJet jet, string identifier) {
     cout << print << endl;
 }
 
-void print_event(int event_number, string message, int color = 37) {
-    if (SUPRESS_FAILURE_OUTPUT) return;
+void _print_event(int event_number, string message, int color_message,
+                  string other_info, int color_other_info) {
     cout << "EVENT " << event_number << ": ";
-    cout << ("\033[" + to_string(color) + "m" + message + "\033[0m") << endl;
-    // if (WRITE_TO_FILE) {
-    //     jet_output << "EVENT " << event_number << ": ";
-    //     jet_output << ("\033[" + to_string(color) + "m" + message + "\033[0m") << endl;
-    // }
+    cout << ("\033[" + to_string(color_message) + "m" + message + "\033[0m")
+         << ("\033[" + to_string(color_other_info) + "m" + other_info + "\033[0m")
+         << endl;
+}
+
+void print_success(int event_number, string message, string other_info,
+                   int color_message, int color_other_info) {
+    _print_event(event_number,message,color_message,other_info,color_other_info);
+}
+
+void print_error(int event_number, string message, int color) {
+    if (SUPRESS_FAILURE_OUTPUT) return;
+    _print_event(event_number,message,color);
+
+}
+
+void print_warning(int event_number, string message, int color) {
+    _print_event(event_number,message,color);
 }
 
 vector<string> split_line(string line) {
