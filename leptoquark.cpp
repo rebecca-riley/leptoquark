@@ -6,7 +6,7 @@ using namespace fastjet;
 
 // --------- GLOBAL FLAGS/CONSTANTS --------- //
 // don't print failed events to terminal
-const bool SUPRESS_FAILURE_OUTPUT = true;
+const bool SUPRESS_FAILURE_OUTPUT = false;
 // write log to file
 const bool WRITE_TO_FILE = true;
 // keep count of how many final state particles, neutrinos, etc.
@@ -132,14 +132,11 @@ int main() {
                         goto NextItem;              // don't store neutrinos
                     }
 
-                    // store all taus + vertex, charge info in Tau vector 'vec_taus'
-                    if(delimited[pdg_code] == tau_p) {
-                        vec_taus.push_back( Tau{get_jet(delimited),true,current_vertex} );
-                        taus += 1;
-                        goto NextItem;
-                    }
-                    if(delimited[pdg_code] == tau_m) {
-                        vec_taus.push_back( Tau{get_jet(delimited),false,current_vertex});
+                    // store all taus + charge,vertex info in Tau vector 'vec_taus'
+                    if(delimited[pdg_code] == tau_p || delimited[pdg_code] == tau_m) {
+                        vec_taus.push_back( Tau{get_jet(delimited),
+                                            (delimited[pdg_code]==tau_p ? true:false),
+                                            current_vertex} );
                         taus += 1;
                         goto NextItem;
                     }
