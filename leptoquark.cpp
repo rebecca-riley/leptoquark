@@ -11,7 +11,7 @@ const bool WRITE_TO_TERM = true;
 const bool WRITE_TO_FILE = true;
 ofstream runlog;
 // true = don't print failed events to terminal or output file
-const bool SUPRESS_FAILURE_OUTPUT = true;
+const bool SUPPRESS_FAILURE_OUTPUT = true;
 // true = keep count of how many final state particles/neutrinos, check for all
 //        particles clustered, prints all failure messages regardless of suppression
 const bool DEBUG_MODE = true;
@@ -455,7 +455,7 @@ void print_success(int event_number, string message, string other_info,
 }
 
 void print_error(int event_number, string message, int color) {
-    if (!DEBUG_MODE && SUPRESS_FAILURE_OUTPUT) return;
+    if (!DEBUG_MODE && SUPPRESS_FAILURE_OUTPUT) return;
     _print_event(event_number,message,color);
 }
 
