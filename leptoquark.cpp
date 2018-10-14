@@ -9,8 +9,9 @@ using namespace fastjet;
 const bool WRITE_TO_TERM = false;
 // true = write log to file
 const bool WRITE_TO_FILE = true;
-// true = don't print failed events to terminal
-const bool SUPRESS_FAILURE_OUTPUT = false;
+ofstream jet_output;
+// true = don't print failed events to terminal or output file
+const bool SUPRESS_FAILURE_OUTPUT = true;
 // true = keep count of how many final state particles, neutrinos, etc.
 const bool OPTIMIZATION_OFF = false;
 // indices
@@ -89,7 +90,6 @@ int main() {
     // --------- FILE IO SETUP --------- //
     ifstream hepmc_file;
     hepmc_file.open(input_filename);
-    ofstream jet_output;
     if (WRITE_TO_FILE) jet_output.open(jet_output_filename);
 
 
@@ -305,17 +305,10 @@ int main() {
         }
 
         // verify that all particles were clustered; track progress in terminal
-        if (WRITE_TO_FILE) jet_output << "EVENT " << events << ": ";
-        if (num_particles_clustered == final_state - neutrinos - taus) {
+        if (num_particles_clustered == final_state - neutrinos - taus)
             print_success(events,"ALL PARTICLES CLUSTERED",
                           " ("+ to_string(num_particles_clustered) + ")");
-            if (WRITE_TO_FILE) jet_output << "ALL PARTICLES CLUSTERED ("
-                                          << num_particles_clustered << ")" << endl;
-        }
-        else {
-            print_warning(events,"NOT ALL PARTICLES CLUSTERED");
-            if (WRITE_TO_FILE) jet_output << "NOT ALL PARTICLES CLUSTERED" << endl;
-        }
+        else print_warning(events,"NOT ALL PARTICLES CLUSTERED");
 
 
         // --------- RECOMBINATORICS COMMENTED OUT FOR TIME BEING --------- //
@@ -436,11 +429,16 @@ void print_jet(PseudoJet jet, string identifier) {
 
 void _print_event(int event_number, string message, int color_message,
                   string other_info, int color_other_info) {
-    if (!WRITE_TO_TERM) return;
-    cout << "EVENT " << event_number << ":\t";
-    cout << ("\033[" + to_string(color_message) + "m" + message + "\033[0m")
-         << ("\033[" + to_string(color_other_info) + "m" + other_info + "\033[0m")
-         << endl;
+    if (WRITE_TO_TERM) {
+        cout << "EVENT " << event_number << ":\t";
+        cout << ("\033[" + to_string(color_message) + "m" + message + "\033[0m")
+             << ("\033[" + to_string(color_other_info) + "m" + other_info + "\033[0m")
+             << endl;
+     }
+     if (WRITE_TO_FILE) {
+        jet_output << "EVENT " << event_number << ":\t";
+        jet_output << message << other_info << endl;
+     }
 }
 
 void print_success(int event_number, string message, string other_info,
