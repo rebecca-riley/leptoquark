@@ -68,26 +68,26 @@ int main() {
     int total_final_state = 0, total_neutrinos = 0;
     // event counters
     int final_state = 0, neutrinos = 0, taus = 0, num_particles_clustered = 0;
+    // event vertex
+    PseudoJet current_vertex;     // bastardization of PseudoJet to use its functions
+    // vectors
+    vector<PseudoJet> particles;
+    vector<Tau> vec_taus;
+    PseudoJet tau_candidates[2];
+    vector<vector<PseudoJet>> passing_events;
     // helper struct
     struct Tau {
         PseudoJet tau;
         bool is_tau_plus;
         PseudoJet vertex;
     };
-    // event vertex
-    PseudoJet current_vertex;     // bastardization of PseudoJet to use functions
-    // vectors
-    vector<Tau> vec_taus;
-    PseudoJet tau_candidates[2];
-    vector<PseudoJet> particles;
-    vector<vector<PseudoJet>> passing_events;
     // FastJet setup
     JetDefinition jet_def(antikt_algorithm, R);
 
     // --------- FILE IO SETUP --------- //
     ifstream hepmc_file;
-    ofstream jet_output;
     hepmc_file.open(input_filename);
+    ofstream jet_output;
     if (WRITE_TO_FILE) jet_output.open(jet_output_filename);
 
 
@@ -96,43 +96,44 @@ int main() {
     getline(hepmc_file,line);
     while(line[0]!='E') {                       // get rid of lines until first event
         getline(hepmc_file,line);
-    }
+    } // found first event
 
-    while(!hepmc_file.eof()) {
+    while(!hepmc_file.eof()) {                  // process full event
         events += 1;
-        // -- counters -- //
+        // reset event counters
         final_state = 0;
         neutrinos = 0;
         taus = 0;
         num_particles_clustered = 0;
-        // reset vectors
+        // reset vectors, arrays
         particles.clear();
         vec_taus.clear();
         tau_candidates[0] = null_jet; tau_candidates[1] = null_jet;
 
-        getline(hepmc_file,line);               // gets line after event or neutrino
-        // cycle through lines until next event
-        while(!hepmc_file.eof() && line[0]!='E') {
-            if(line[0]=='P'){                       // only want particles
+        getline(hepmc_file,line);               // get rid of event header line
+
+        while(!hepmc_file.eof() && line[0]!='E') {  // process lines within event
+            if(line[0]=='P'){                       // only process particles
                 vector<string> delimited = split_line(line);
 
-                // only want non-neutrino, final state particles
-                // push candidates onto PseudoJet vector 'particles'
+                // only want final state particles
                 if(delimited[status]==final) {
-                    // -- counters -- //
+                    // counters //
                     final_state += 1;
                     if (OPTIMIZATION_OFF) total_final_state += 1;
 
+                    // skip storing neutrinos
                     if(delimited[pdg_code] == nu_e || delimited[pdg_code] == nu_mu ||
                        delimited[pdg_code] == nu_tau || delimited[pdg_code] == nu_tau_pr)
                     {
-                        // -- counters -- //
+                        // counters //
                         neutrinos += 1;
                         if (OPTIMIZATION_OFF) total_neutrinos += 1;
-                        goto NextItem;              // don't store neutrinos
+                        goto NextItem;
                     }
 
-                    // store all taus + charge,vertex info in Tau vector 'vec_taus'
+                    // skip storing taus
+                    // store instead tau,charge,vertex info in Tau vector 'vec_taus'
                     if(delimited[pdg_code] == tau_p || delimited[pdg_code] == tau_m) {
                         vec_taus.push_back( Tau{get_jet(delimited),
                                             (delimited[pdg_code]==tau_p ? true:false),
@@ -141,6 +142,8 @@ int main() {
                         goto NextItem;
                     }
 
+                    // store all other final state particles in vector 'particles'
+                    // if particle is b, tag before storing
                     if(delimited[pdg_code] == b_p || delimited[pdg_code] == b_m) {
                         PseudoJet b = get_jet(delimited);
                         b.set_user_index(1);
