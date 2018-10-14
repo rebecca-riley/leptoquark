@@ -170,7 +170,7 @@ int main() {
         // cut 1 -- at least two taus
         if (vec_taus.size() < 2) {
             num_fail++;
-            print_error(events,"failed cut 1 (lacks tau+ or tau-)");
+            print_error(events,"failed cut 1: lacks tau+ or tau-");
             continue;
         }
 
@@ -203,27 +203,27 @@ int main() {
         }
         if (!vertex_match) {
             num_fail++;
-            print_error(events,"failed cut 4 (taus originate from different vertices)");
+            print_error(events,"failed cut 4: taus originate from different vertices");
             continue;
         }
         if (!opposite_charge) {
             num_fail++;
-            print_error(events,"failed cut 4 (taus have same opposite charges)");
+            print_error(events,"failed cut 4: taus have same opposite charges");
             continue;
         }
         if (!pt_pass) {
             num_fail++;
-            print_error(events,"failed cut 2 (taus have pt <= 50)");
+            print_error(events,"failed cut 2: taus have pt <= 50");
             continue;
         }
         if (!eta_pass) {
             num_fail++;
-            print_error(events,"failed cut 3 (taus have |eta| >= 2.3)");
+            print_error(events,"failed cut 3: taus have |eta| >= 2.3");
             continue;
         }
         if (!spatially_separated) {
             num_fail++;
-            print_error(events,"failed cut 4 (taus have separation <= 0.5)");
+            print_error(events,"failed cut 4: taus have separation <= 0.5");
             continue;
         }
 
