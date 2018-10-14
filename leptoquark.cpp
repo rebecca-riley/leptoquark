@@ -7,6 +7,8 @@ using namespace fastjet;
 // --------- GLOBAL FLAGS/CONSTANTS --------- //
 // supress failure messages
 const bool SUPRESS_FAILURE_OUTPUT = true;
+// write log to file
+const bool WRITE_TO_FILE = true;
 // indices
 const int PX = 3, PY = 4, PZ = 5, E = 6;
 
@@ -81,7 +83,7 @@ int main() {
     ifstream hepmc_file;
     ofstream jet_output, w_output, t_output;
     hepmc_file.open(input_filename);
-    jet_output.open(jet_output_filename);
+    if (WRITE_TO_FILE) jet_output.open(jet_output_filename);
     w_output.open(w_output_filename);
     t_output.open(t_output_filename);
 
@@ -300,15 +302,6 @@ int main() {
             continue;
         }
 
-        // -- info -- //
-        // write jets for event to jet_output
-        // jet_output << "EVENT " << events
-        //            << " (" << jets.size() << " jets w/ pt>" << jet_pt_cutoff << ")"
-        //            << endl;
-        // for (unsigned i = 0; i < jets.size(); i++) {
-        //     jet_output << "jet " << i << " " << jets[i].E() << " " << jets[i].px()
-        //                << " " << jets[i].py() << " " << jets[i].pz() << endl;
-        // }
 
         // find total number of particles clustered
         vector<PseudoJet> all_jets = cs.inclusive_jets();
@@ -318,15 +311,18 @@ int main() {
 
         // verify that all particles were clustered; track progress in terminal
         cout << "EVENT " << events << ": ";
+        if (WRITE_TO_FILE) jet_output << "EVENT " << events << ": ";
         if (num_particles_clustered == final_state - neutrinos - taus) {
             cout << "\033[32mALL PARTICLES CLUSTERED\033[0m ("
                  << num_particles_clustered << ")" << endl;
-            // jet_output << "ALL PARTICLES CLUSTERED" << endl;
+            if (WRITE_TO_FILE) jet_output << "ALL PARTICLES CLUSTERED ("
+                                          << num_particles_clustered << ")" << endl;
         }
         else {
             cout << "\033[31mNOT ALL PARTICLES CLUSTERED\033[0m ("
                  << num_particles_clustered << ")" << endl;
-            // jet_output << "NOT ALL PARTICLES CLUSTERED" << endl;
+            if (WRITE_TO_FILE) jet_output << "NOT ALL PARTICLES CLUSTERED ("
+                                          << num_particles_clustered << ")" << endl;
         }
         // -- info -- //
 
@@ -415,16 +411,18 @@ int main() {
     cout << "Number of events passing cuts: " << (events - num_fail) << endl;
     cout << "Percent pass: " << (((events - num_fail))/double(events)*100) << endl;
 
-    jet_output << "Number of events processed: " << events << endl;
-    jet_output << "Number of final state particles: " << total_final_state << endl;
-    jet_output << "Number of final state neutrinos: " << total_neutrinos << endl;
+    if (WRITE_TO_FILE) {
+        jet_output << "Number of events processed: " << events << endl;
+        jet_output << "Number of final state particles: " << total_final_state << endl;
+        jet_output << "Number of final state neutrinos: " << total_neutrinos << endl;
 
-    cout << "Jet information written to " << jet_output_filename << endl;
+        cout << "Jet information written to " << jet_output_filename << endl;
+    }
 
 
     // --------- CLEANUP --------- //
     hepmc_file.close();
-    jet_output.close();
+    if (WRITE_TO_FILE) jet_output.close();
     w_output.close();
     t_output.close();
 
@@ -459,6 +457,10 @@ void print_event(int event_number, string message, int color = 37) {
     if (SUPRESS_FAILURE_OUTPUT) return;
     cout << "EVENT " << event_number << ": ";
     cout << ("\033[" + to_string(color) + "m" + message + "\033[0m") << endl;
+    // if (WRITE_TO_FILE) {
+    //     jet_output << "EVENT " << event_number << ": ";
+    //     jet_output << ("\033[" + to_string(color) + "m" + message + "\033[0m") << endl;
+    // }
 }
 
 vector<string> split_line(string line) {
