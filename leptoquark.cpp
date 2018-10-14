@@ -152,7 +152,7 @@ int main() {
                     else particles.push_back(get_jet(delimited));
                 }
             }
-            if(line[0]=='V') current_vertex.reset(get_jet(split_line(line)));
+            else if(line[0]=='V') current_vertex.reset(get_jet(split_line(line)));
 
             NextItem:
             getline(hepmc_file,line);
