@@ -12,10 +12,10 @@ const int PX = 3, PY = 4, PZ = 5, E = 6;
 
 // --------- HELPER FUNCTION DECLARATIONS --------- //
 PseudoJet get_jet(vector<string> delimited);
-double get_spatial_separation(PseudoJet jet1, PseudoJet jet2);
+void print_jet(PseudoJet jet, string identifier = "");
 void print_event(int event_number, string message, int color);
 vector<string> split_line(string line);
-void print_jet(PseudoJet jet, string identifier = "");
+double get_spatial_separation(PseudoJet jet1, PseudoJet jet2);
 
 // --------- CUT LIST --------- //
 // (1) select final state with two taus and two b-jets
@@ -438,21 +438,6 @@ PseudoJet get_jet(vector<string> delimited) {
                      stof(delimited[PZ]),stof(delimited[E]));
 }
 
-double get_spatial_separation(PseudoJet jet1, PseudoJet jet2) {
-    return sqrt(pow( (jet1.phi()-jet2.phi()), 2) + pow( (jet1.eta()-jet2.eta()), 2));
-}
-
-void print_event(int event_number, string message, int color = 37) {
-    if (SUPRESS_FAILURE_OUTPUT) return;
-    cout << "EVENT " << event_number << ": ";
-    cout << ("\033[" + to_string(color) + "m" + message + "\033[0m") << endl;
-}
-
-vector<string> split_line(string line) {
-    istringstream iss(line);
-    return vector<string>((istream_iterator<string>(iss)),istream_iterator<string>());
-}
-
 void print_jet(PseudoJet jet, string identifier) {
     int buffer = 15;
     string print = identifier;
@@ -468,4 +453,19 @@ void print_jet(PseudoJet jet, string identifier) {
         print += temp;
     }
     cout << print << endl;
+}
+
+void print_event(int event_number, string message, int color = 37) {
+    if (SUPRESS_FAILURE_OUTPUT) return;
+    cout << "EVENT " << event_number << ": ";
+    cout << ("\033[" + to_string(color) + "m" + message + "\033[0m") << endl;
+}
+
+vector<string> split_line(string line) {
+    istringstream iss(line);
+    return vector<string>((istream_iterator<string>(iss)),istream_iterator<string>());
+}
+
+double get_spatial_separation(PseudoJet jet1, PseudoJet jet2) {
+    return sqrt(pow( (jet1.phi()-jet2.phi()), 2) + pow( (jet1.eta()-jet2.eta()), 2));
 }
