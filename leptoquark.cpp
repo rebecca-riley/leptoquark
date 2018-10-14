@@ -269,7 +269,7 @@ int main() {
 
 
         // --------- JET PAIRING, CUTS ON PAIRS --------- //
-        // cut 7 -- select tau, b pair that minimizes mass difference
+        // cut 7 -- select tau, b pairs that minimizes mass difference b/w pairs
         double min_diff = 10000000000000;       // very large number -- will be reset
         struct {                                // immediately by first mass_diff
             PseudoJet jet[2];
