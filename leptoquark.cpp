@@ -33,6 +33,11 @@ void print_jet(PseudoJet jet, string identifier = "");
 
 int main() {
     // --------- CONSTANTS --------- //
+    // input, output file names
+    const string input_filename = "ditop_experiment4.hepmc",
+                 jet_output_filename = "jet_output.txt",
+                 w_output_filename = "w_output.txt",
+                 t_output_filename = "t_output.txt";
     // indices
     const int barcode = 1, pdg_code = 2, px = 3, py = 4, pz = 5, E = 6, gen_mass = 7,
               status = 8;
@@ -48,11 +53,7 @@ int main() {
     const PseudoJet null_jet = PseudoJet(0,0,0,0);
     // colors
     const int RED = 31, GREEN = 32, YELLOW = 33, BLUE = 34, PINK = 35, CYAN = 36;
-    // input, output file names
-    const string input_filename = "ditop_experiment4.hepmc",
-                 jet_output_filename = "jet_output.txt",
-                 w_output_filename = "w_output.txt",
-                 t_output_filename = "t_output.txt";
+
 
     /// --------- VARIABLES --------- //
     // global counters
