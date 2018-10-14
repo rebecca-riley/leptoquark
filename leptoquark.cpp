@@ -164,7 +164,7 @@ int main() {
         if (vec_taus.size() < 2) {
             num_fail++;
             print_error(events,"failed cut 1: lacks tau+ or tau-");
-            continue;
+            continue;                           // continue => process next event
         }
 
         // cuts 2-4
@@ -246,10 +246,8 @@ int main() {
         int num_jets_with_b = 0;
         for (int i = 0; i < jets.size(); i++) {
             vector<PseudoJet> constits = jets[i].constituents();
-            bool has_b = false;
             for (int j = 0; j < constits.size(); j++) {
                 if (constits[j].user_index() == 1) {
-                    has_b = true;
                     num_jets_with_b++;
                     break;
                 }
