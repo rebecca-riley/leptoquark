@@ -44,9 +44,7 @@ int main() {
     // --------- CONSTANTS --------- //
     // input, output file names
     const string input_filename = "ditop_experiment4.hepmc",
-                 jet_output_filename = "jet_output.txt",
-                 w_output_filename = "w_output.txt",
-                 t_output_filename = "t_output.txt";
+                 jet_output_filename = "jet_output.txt";
     // indices
     const int barcode = 1, pdg_code = 2, px = 3, py = 4, pz = 5, E = 6, gen_mass = 7,
               status = 8;
@@ -86,12 +84,9 @@ int main() {
 
     // --------- FILE IO SETUP --------- //
     ifstream hepmc_file;
-    ofstream jet_output, w_output, t_output;
+    ofstream jet_output;
     hepmc_file.open(input_filename);
     if (WRITE_TO_FILE) jet_output.open(jet_output_filename);
-    w_output.open(w_output_filename);
-    t_output.open(t_output_filename);
-
 
 
     // --------- HEPMC PARSING --------- //
@@ -389,19 +384,6 @@ int main() {
         //     }
         // }
 
-        // // -- info -- //
-        // // prints invariant masses from w,t searches to w,t output files
-        // sort(inv_mass_w_vec.begin(),inv_mass_w_vec.end());
-        // for (int i = 0; i < inv_mass_w_vec.size(); i++) {
-        //     w_output << inv_mass_w_vec[i] << endl;
-        // }
-
-        // sort(inv_mass_t_vec.begin(),inv_mass_t_vec.end());
-        // for (int i = 0; i < inv_mass_t_vec.size(); i++) {
-        //     t_output << inv_mass_t_vec[i] << endl;
-        // }
-        // // -- info -- //
-
         // break;                                   // DEBUG -- run single event
     }
 
@@ -424,8 +406,6 @@ int main() {
     // --------- CLEANUP --------- //
     hepmc_file.close();
     if (WRITE_TO_FILE) jet_output.close();
-    w_output.close();
-    t_output.close();
 
     return 0;
 }
@@ -470,7 +450,6 @@ void print_success(int event_number, string message, string other_info,
 void print_error(int event_number, string message, int color) {
     if (SUPRESS_FAILURE_OUTPUT) return;
     _print_event(event_number,message,color);
-
 }
 
 void print_warning(int event_number, string message, int color) {
