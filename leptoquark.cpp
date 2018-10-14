@@ -6,7 +6,7 @@ using namespace fastjet;
 
 // --------- GLOBAL FLAGS/CONSTANTS --------- //
 // true = display event processing messages on terminal
-const bool WRITE_TO_TERM = false;
+const bool WRITE_TO_TERM = true;
 // true = write runlog to file
 const bool WRITE_TO_FILE = true;
 ofstream runlog;
@@ -14,7 +14,7 @@ ofstream runlog;
 const bool SUPRESS_FAILURE_OUTPUT = true;
 // true = keep count of how many final state particles/neutrinos, check for all
 //        particles clustered, etc.
-const bool OPTIMIZATION_OFF = false;
+const bool DEBUG_MODE = true;
 // indices
 const int PX = 3, PY = 4, PZ = 5, E = 6;
 // colors
@@ -123,7 +123,7 @@ int main() {
                 if(delimited[status]==final) {
                     // counters //
                     final_state += 1;
-                    if (OPTIMIZATION_OFF) total_final_state += 1;
+                    if (DEBUG_MODE) total_final_state += 1;
 
                     // skip storing neutrinos
                     if(delimited[pdg_code] == nu_e || delimited[pdg_code] == nu_mu ||
@@ -131,7 +131,7 @@ int main() {
                     {
                         // counters //
                         neutrinos += 1;
-                        if (OPTIMIZATION_OFF) total_neutrinos += 1;
+                        if (DEBUG_MODE) total_neutrinos += 1;
                         goto NextItem;
                     }
 
@@ -299,12 +299,11 @@ int main() {
 
 
         // --------- EVENT PROCESSING OUTPUT --------- //
-        if (OPTIMIZATION_OFF) {
+        if (DEBUG_MODE) {
             // find total number of particles clustered
             vector<PseudoJet> all_jets = cs.inclusive_jets();
-            for (unsigned i = 0; i < all_jets.size(); i++) {
+            for (unsigned i = 0; i < all_jets.size(); i++)
                 num_particles_clustered += all_jets[i].constituents().size();
-            }
 
             // verify that all particles were clustered; track progress in terminal
             if (num_particles_clustered == final_state - neutrinos - taus)
@@ -393,7 +392,7 @@ int main() {
         cout << "Jet information written to " << runlog_filename << endl;
     }
 
-    if (OPTIMIZATION_OFF) {
+    if (DEBUG_MODE) {
         cout << "Number of final state particles: " << total_final_state << endl;
         cout << "Number of final state neutrinos: " << total_neutrinos << endl;
 
