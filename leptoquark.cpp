@@ -5,10 +5,12 @@ using namespace std;
 using namespace fastjet;
 
 // --------- GLOBAL FLAGS/CONSTANTS --------- //
-// true = don't print failed events to terminal
-const bool SUPRESS_FAILURE_OUTPUT = false;
+// true = display event processing messages on terminal
+const bool WRITE_TO_TERM = false;
 // true = write log to file
 const bool WRITE_TO_FILE = true;
+// true = don't print failed events to terminal
+const bool SUPRESS_FAILURE_OUTPUT = false;
 // true = keep count of how many final state particles, neutrinos, etc.
 const bool OPTIMIZATION_OFF = false;
 // indices
@@ -414,6 +416,7 @@ PseudoJet get_jet(vector<string> delimited) {
                      stof(delimited[PZ]),stof(delimited[E]));
 }
 
+// debugging function
 void print_jet(PseudoJet jet, string identifier) {
     int buffer = 15;
     string print = identifier;
@@ -433,6 +436,7 @@ void print_jet(PseudoJet jet, string identifier) {
 
 void _print_event(int event_number, string message, int color_message,
                   string other_info, int color_other_info) {
+    if (!WRITE_TO_TERM) return;
     cout << "EVENT " << event_number << ":\t";
     cout << ("\033[" + to_string(color_message) + "m" + message + "\033[0m")
          << ("\033[" + to_string(color_other_info) + "m" + other_info + "\033[0m")
