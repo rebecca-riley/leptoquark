@@ -278,17 +278,17 @@ int main() {
 
         for (int i = 0; i < jets.size(); i++) {
             for (int j = 0; j < vec_taus.size(); j++) {
+                int i_next = (i+1)%jets.size(), j_next = (j+1)%vec_taus.size();
                 PseudoJet combo1 = jets[i] + vec_taus[j].tau;
-                PseudoJet combo2 = jets[(i+1)%jets.size()]
-                                 + vec_taus[(j+1)%vec_taus.size()].tau;
+                PseudoJet combo2 = jets[i_next] + vec_taus[j_next].tau;
                 double mass_diff = abs(combo1.m() - combo2.m());
 
                 if (mass_diff < min_diff){
                     min_diff = mass_diff;
                     min_pairs.jet[0] = jets[i];
-                    min_pairs.jet[1] = jets[(i+1)%jets.size()];
+                    min_pairs.jet[1] = jets[i_next];
                     min_pairs.tau[0] = vec_taus[j];
-                    min_pairs.tau[1] = vec_taus[(j+1)%vec_taus.size()];
+                    min_pairs.tau[1] = vec_taus[j_next];
                 }
             }
         }
