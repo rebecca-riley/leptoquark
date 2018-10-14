@@ -418,8 +418,8 @@ int main() {
     // --------- RUNTIME --------- //
     auto finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = finish - start;
-    cout << "Runtime: " << elapsed.count() << endl;
-    if (WRITE_TO_FILE) runlog << "Runtime: " << elapsed.count() << endl;
+    cout << "Runtime (seconds): " << elapsed.count() << endl;
+    if (WRITE_TO_FILE) runlog << "Runtime (seconds): " << elapsed.count() << endl;
 
     // --------- CLEANUP --------- //
     hepmc_file.close();
