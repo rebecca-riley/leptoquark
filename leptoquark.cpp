@@ -180,7 +180,13 @@ int main() {
         for (int i = 0; i < vec_taus.size() - 1; i++) {     // compare all combinations of taus
             for (int j = i + 1; j < vec_taus.size(); j++) {
                 // cut 4 -- same vertex
+                // check vertex first, other criteria only checked if vertex matches
                 if (vec_taus[i].vertex == vec_taus[j].vertex) {
+                    // if more than one vertex match in event (highly unusual), print warning
+                    if (vertex_match == true)
+                        print_warning(events,"ANALYSIS NOT VALID FOR THIS EVENT -- "
+                              "more than one tau production vertex, check manually");
+
                     vertex_match = true;
                     // cut 4 -- opposite charge
                     if (vec_taus[i].is_tau_plus == !vec_taus[j].is_tau_plus)
@@ -195,7 +201,10 @@ int main() {
                     if (get_spatial_separation(vec_taus[i].tau,vec_taus[j].tau) > 0.5)
                         spatially_separated = true;
 
-                    // usable taus go on array tau_candidates
+                    // if taus are from same vertex, they go on array as candidates
+                    // if there is more than one production vertex per event, this
+                    //    will cause problems since only taus from the last vertex
+                    //    will go on the array (very unlikely to happen)
                     tau_candidates[0] = vec_taus[i].tau;
                     tau_candidates[1] = vec_taus[j].tau;
                 }
