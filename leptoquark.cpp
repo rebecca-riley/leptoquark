@@ -376,22 +376,27 @@ int main() {
     }
 
     // --------- FINAL STATUS INFO --------- //
+    // write to terminal even if terminal output is suppressed
     cout << "Number of events processed: " << events << endl;
     cout << "Number of events passing cuts: " << (events - num_fail) << endl;
     cout << "Percent pass: " << (((events - num_fail))/double(events)*100) << endl;
-    if (OPTIMIZATION_OFF) {
-        cout << "Number of final state particles: " << total_final_state << endl;
-        cout << "Number of final state neutrinos: " << total_neutrinos << endl;
-    }
+
     if (WRITE_TO_FILE) {
         runlog << "Number of events processed: " << events << endl;
         runlog << "Number of events passing cuts: " << (events - num_fail) << endl;
         runlog << "Percent pass: " << (((events - num_fail))/double(events)*100) << endl;
-        if (OPTIMIZATION_OFF) {
+
+        cout << "Jet information written to " << runlog_filename << endl;
+    }
+
+    if (OPTIMIZATION_OFF) {
+        cout << "Number of final state particles: " << total_final_state << endl;
+        cout << "Number of final state neutrinos: " << total_neutrinos << endl;
+
+        if (WRITE_TO_FILE) {
             runlog << "Number of final state particles: " << total_final_state << endl;
             runlog << "Number of final state neutrinos: " << total_neutrinos << endl;
         }
-        cout << "Jet information written to " << runlog_filename << endl;
     }
 
 
