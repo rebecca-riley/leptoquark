@@ -5,11 +5,11 @@ using namespace std;
 using namespace fastjet;
 
 // --------- GLOBAL FLAGS/CONSTANTS --------- //
-// don't print failed events to terminal
+// true = don't print failed events to terminal
 const bool SUPRESS_FAILURE_OUTPUT = false;
-// write log to file
+// true = write log to file
 const bool WRITE_TO_FILE = true;
-// keep count of how many final state particles, neutrinos, etc.
+// true = keep count of how many final state particles, neutrinos, etc.
 const bool OPTIMIZATION_OFF = false;
 // indices
 const int PX = 3, PY = 4, PZ = 5, E = 6;
