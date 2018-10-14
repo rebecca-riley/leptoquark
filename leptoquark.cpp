@@ -222,11 +222,6 @@ int main() {
 
 
         // --------- JET CLUSTERING --------- //
-        // -- info -- //
-        // if (events%50 == 0) cout << events << endl;
-        // -- info -- //
-        // if (events>5) continue;  // DEBUG -- run jet analysis for specific events
-
         ClusterSequence cs(particles, jet_def);
         // cut 5 -- pt_jet > 50
         vector<PseudoJet> jets = sorted_by_pt(cs.inclusive_jets(jet_pt_cutoff));
