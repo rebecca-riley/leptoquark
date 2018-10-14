@@ -9,13 +9,13 @@ using namespace fastjet;
 // true = display event processing messages on terminal
 const bool WRITE_TO_TERM = true;
 // true = write runlog to file
-const bool WRITE_TO_FILE = true;
+const bool WRITE_TO_FILE = false;
 ofstream runlog;
 // true = don't print failed events to terminal or output file
 const bool SUPPRESS_FAILURE_OUTPUT = true;
 // true = keep count of how many final state particles/neutrinos, check for all
 //        particles clustered, prints all failure messages regardless of suppression
-const bool DEBUG_MODE = true;
+const bool DEBUG_MODE = false;
 // indices
 const int PX = 3, PY = 4, PZ = 5, E = 6;
 // colors
