@@ -72,7 +72,6 @@ int main() {
     PseudoJet current_vertex;     // bastardization of PseudoJet to use its functions
     // vectors
     vector<PseudoJet> particles;
-    vector<Tau> vec_taus;
     PseudoJet tau_candidates[2];
     vector<vector<PseudoJet>> passing_events;
     // helper struct
@@ -81,6 +80,7 @@ int main() {
         bool is_tau_plus;
         PseudoJet vertex;
     };
+    vector<Tau> vec_taus;
     // FastJet setup
     JetDefinition jet_def(antikt_algorithm, R);
 
