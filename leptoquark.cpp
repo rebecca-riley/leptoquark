@@ -221,7 +221,7 @@ int main() {
         }
 
 
-        // --------- JET CLUSTERING --------- //
+        // --------- JET CLUSTERING, CUTS ON JETS --------- //
         ClusterSequence cs(particles, jet_def);
         // cut 5 -- pt_jet > 50
         vector<PseudoJet> jets = sorted_by_pt(cs.inclusive_jets(jet_pt_cutoff));
@@ -262,6 +262,8 @@ int main() {
             continue;
         }
 
+
+        // --------- JET PAIRING, CUTS ON PAIRS --------- //
         // cut 7 -- select tau, b pair that minimizes mass difference
         double min_diff = 10000000000000;       // very large number -- will be reset
         struct {                                // immediately by first mass_diff
@@ -295,6 +297,7 @@ int main() {
         }
 
 
+        // --------- EVENT PROCESSING OUTPUT --------- //
         // find total number of particles clustered
         vector<PseudoJet> all_jets = cs.inclusive_jets();
         for (unsigned i = 0; i < all_jets.size(); i++) {
@@ -313,7 +316,6 @@ int main() {
             print_warning(events,"NOT ALL PARTICLES CLUSTERED");
             if (WRITE_TO_FILE) jet_output << "NOT ALL PARTICLES CLUSTERED" << endl;
         }
-        // -- info -- //
 
 
         // --------- RECOMBINATORICS COMMENTED OUT FOR TIME BEING --------- //
