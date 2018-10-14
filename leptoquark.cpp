@@ -7,9 +7,9 @@ using namespace fastjet;
 // --------- GLOBAL FLAGS/CONSTANTS --------- //
 // true = display event processing messages on terminal
 const bool WRITE_TO_TERM = false;
-// true = write log to file
+// true = write runlog to file
 const bool WRITE_TO_FILE = true;
-ofstream jet_output;
+ofstream runlog;
 // true = don't print failed events to terminal or output file
 const bool SUPRESS_FAILURE_OUTPUT = true;
 // true = keep count of how many final state particles, neutrinos, etc.
@@ -49,7 +49,7 @@ int main() {
     // --------- CONSTANTS --------- //
     // input, output file names
     const string input_filename = "ditop_experiment4.hepmc",
-                 jet_output_filename = "jet_output.txt";
+                 runlog_filename = "runlog.txt";
     // indices
     const int barcode = 1, pdg_code = 2, px = 3, py = 4, pz = 5, E = 6, gen_mass = 7,
               status = 8;
@@ -90,7 +90,7 @@ int main() {
     // --------- FILE IO SETUP --------- //
     ifstream hepmc_file;
     hepmc_file.open(input_filename);
-    if (WRITE_TO_FILE) jet_output.open(jet_output_filename);
+    if (WRITE_TO_FILE) runlog.open(runlog_filename);
 
 
     // --------- HEPMC PARSING --------- //
@@ -384,20 +384,20 @@ int main() {
         cout << "Number of final state neutrinos: " << total_neutrinos << endl;
     }
     if (WRITE_TO_FILE) {
-        jet_output << "Number of events processed: " << events << endl;
-        jet_output << "Number of events passing cuts: " << (events - num_fail) << endl;
-        jet_output << "Percent pass: " << (((events - num_fail))/double(events)*100) << endl;
+        runlog << "Number of events processed: " << events << endl;
+        runlog << "Number of events passing cuts: " << (events - num_fail) << endl;
+        runlog << "Percent pass: " << (((events - num_fail))/double(events)*100) << endl;
         if (OPTIMIZATION_OFF) {
-            jet_output << "Number of final state particles: " << total_final_state << endl;
-            jet_output << "Number of final state neutrinos: " << total_neutrinos << endl;
+            runlog << "Number of final state particles: " << total_final_state << endl;
+            runlog << "Number of final state neutrinos: " << total_neutrinos << endl;
         }
-        cout << "Jet information written to " << jet_output_filename << endl;
+        cout << "Jet information written to " << runlog_filename << endl;
     }
 
 
     // --------- CLEANUP --------- //
     hepmc_file.close();
-    if (WRITE_TO_FILE) jet_output.close();
+    if (WRITE_TO_FILE) runlog.close();
 
     return 0;
 }
@@ -436,8 +436,8 @@ void _print_event(int event_number, string message, int color_message,
              << endl;
      }
      if (WRITE_TO_FILE) {
-        jet_output << "EVENT " << event_number << ":\t";
-        jet_output << message << other_info << endl;
+        runlog << "EVENT " << event_number << ":\t";
+        runlog << message << other_info << endl;
      }
 }
 
