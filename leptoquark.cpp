@@ -16,10 +16,26 @@ const bool SUPPRESS_FAILURE_OUTPUT = true;
 // true = keep count of how many final state particles/neutrinos, check for all
 //        particles clustered, prints all failure messages regardless of suppression
 const bool DEBUG_MODE = false;
+// run parameters
+const int num_jets = 3;
+const int num_taus = 1;
+const int pure_taus = 2;
+const int num_b_tagged = 1;
 // indices
 const int PX = 3, PY = 4, PZ = 5, E = 6;
 // colors
 const int RED = 31, GREEN = 32, YELLOW = 33, BLUE = 34, PINK = 35, CYAN = 36, GREY = 37;
+
+// helper struct
+struct Tau {
+    PseudoJet tau;
+    bool is_tau_plus;
+    PseudoJet vertex;
+};
+
+// --------- EVENT REJECTION SUBROUTINES DECLARATIONS --------- //
+int two_taus_pre_cluster(vector<Tau>& vec_taus, PseudoJet tau_candidates[], int events);
+void two_taus_post_cluser();
 
 // --------- HELPER FUNCTION DECLARATIONS --------- //
 PseudoJet get_jet(vector<string> delimited);
@@ -53,7 +69,7 @@ int main() {
 
     // --------- CONSTANTS --------- //
     // input, output file names
-    const string input_filename = "ditop_experiment4.hepmc",
+    const string input_filename = "ditop_10k.hepmc",
                  runlog_filename = "runlog.txt";
     // indices
     const int barcode = 1, pdg_code = 2, px = 3, py = 4, pz = 5, E = 6, gen_mass = 7,
@@ -82,12 +98,6 @@ int main() {
     vector<PseudoJet> particles;
     PseudoJet tau_candidates[2];
     vector<vector<PseudoJet>> passing_events;
-    // helper struct
-    struct Tau {
-        PseudoJet tau;
-        bool is_tau_plus;
-        PseudoJet vertex;
-    };
     vector<Tau> vec_taus;
     // FastJet setup
     JetDefinition jet_def(antikt_algorithm, R);
@@ -168,74 +178,19 @@ int main() {
 
         // --------- CUTS ON TAUS --------- //
         // cut 1 -- at least two taus
-        if (vec_taus.size() < 2) {
+        if (vec_taus.size() < num_taus) {
             num_fail++;
-            print_error(events,"failed cut 1: lacks tau+ or tau-");
+            print_error(events,"failed cut 1: not enough taus");
             continue;                           // continue => process next event
         }
 
-        // cuts 2-4
-        bool vertex_match = false, opposite_charge = false, pt_pass = false,
-             eta_pass = false, spatially_separated = false;
-        for (int i = 0; i < vec_taus.size() - 1; i++) {     // compare all combinations of taus
-            for (int j = i + 1; j < vec_taus.size(); j++) {
-                // cut 4 -- same vertex
-                // check vertex first, other criteria only checked if vertex matches
-                if (vec_taus[i].vertex == vec_taus[j].vertex) {
-                    // if more than one vertex match in event (highly unusual), print warning
-                    if (vertex_match == true)
-                        print_warning(events,"ANALYSIS NOT VALID FOR THIS EVENT -- "
-                              "more than one tau production vertex, check manually");
-
-                    vertex_match = true;
-                    // cut 4 -- opposite charge
-                    if (vec_taus[i].is_tau_plus == !vec_taus[j].is_tau_plus)
-                        opposite_charge = true;
-                    // cut 2 -- pt > 50
-                    if (vec_taus[i].tau.pt() > 50 && vec_taus[j].tau.pt() > 50)
-                        pt_pass = true;
-                    // cut 3 -- |eta| < 2.3
-                    if (abs(vec_taus[i].tau.eta()) < 2.3 && abs(vec_taus[j].tau.eta()) < 2.3)
-                        eta_pass = true;
-                    // cut 4 -- spatial separation
-                    if (get_spatial_separation(vec_taus[i].tau,vec_taus[j].tau) > 0.5)
-                        spatially_separated = true;
-
-                    // if taus are from same vertex, they go on array as candidates
-                    // if there is more than one production vertex per event, this
-                    //    will cause problems since only taus from the last vertex
-                    //    will go on the array (very unlikely to happen)
-                    tau_candidates[0] = vec_taus[i].tau;
-                    tau_candidates[1] = vec_taus[j].tau;
+        if (vec_taus.size() == pure_taus) {
+                if (two_taus_pre_cluster(vec_taus, tau_candidates, events, num_fail) == -1) {
+                    num_fail++;
+                    continue;
                 }
             }
-        }
-        if (!vertex_match) {
-            num_fail++;
-            print_error(events,"failed cut 4: taus originate from different vertices");
-            continue;
-        }
-        if (!opposite_charge) {
-            num_fail++;
-            print_error(events,"failed cut 4: taus have same opposite charges");
-            continue;
-        }
-        if (!pt_pass) {
-            num_fail++;
-            print_error(events,"failed cut 2: taus have pt <= 50");
-            continue;
-        }
-        if (!eta_pass) {
-            num_fail++;
-            print_error(events,"failed cut 3: taus have |eta| >= 2.3");
-            continue;
-        }
-        if (!spatially_separated) {
-            num_fail++;
-            print_error(events,"failed cut 4: taus have separation <= 0.5");
-            continue;
-        }
-
+        // else
 
         // --------- JET CLUSTERING, CUTS ON JETS --------- //
         ClusterSequence cs(particles, jet_def);
@@ -244,70 +199,11 @@ int main() {
 
         // cut 5 -- |eta_jet| < 2.4, spatial separation from taus > 0.5
         for (unsigned i = 0; i < jets.size(); i++) {
-            if (    abs(jets[i].eta()) >= 2.4 ||
-                    get_spatial_separation(jets[i],tau_candidates[0]) <= 0.5 ||
-                    get_spatial_separation(jets[i],tau_candidates[1]) <= 0.5    )
-                jets.erase(jets.begin()+i);
-        }
-
-        // cut 5 -- at least two jets must remain for possible b-tagging
-        if (jets.size() < 2) {
-            num_fail++;
-            print_error(events,"failed cut 5: less than two jets remaining after"
-                                "eta, separation cuts");
-            continue;
-        }
-
-        // cut 6 -- at least two jets contain b's
-        int num_jets_with_b = 0;
-        for (int i = 0; i < jets.size(); i++) {
-            vector<PseudoJet> constits = jets[i].constituents();
-            for (int j = 0; j < constits.size(); j++) {
-                if (constits[j].user_index() == 1) {
-                    num_jets_with_b++;
-                    break;
-                }
-            }
-        }
-
-        if (num_jets_with_b < 1) {
-            num_fail++;
-            print_error(events,"failed cut 6: no jets containing b's");
-            continue;
-        }
-
-
-        // --------- JET PAIRING, CUTS ON PAIRS --------- //
-        // cut 7 -- select tau, b pairs that minimizes mass difference b/w pairs
-        double min_diff = 10000000000000;       // very large number -- will be reset
-        struct {                                // immediately by first mass_diff
-            PseudoJet jet[2];
-            Tau tau[2];
-        } min_pairs;
-
-        for (int i = 0; i < jets.size(); i++) {
-            for (int j = 0; j < vec_taus.size(); j++) {
-                int i_next = (i+1)%jets.size(), j_next = (j+1)%vec_taus.size();
-                PseudoJet combo1 = jets[i] + vec_taus[j].tau;
-                PseudoJet combo2 = jets[i_next] + vec_taus[j_next].tau;
-                double mass_diff = abs(combo1.m() - combo2.m());
-
-                if (mass_diff < min_diff){
-                    min_diff = mass_diff;
-                    min_pairs.jet[0] = jets[i];
-                    min_pairs.jet[1] = jets[i_next];
-                    min_pairs.tau[0] = vec_taus[j];
-                    min_pairs.tau[1] = vec_taus[j_next];
-                }
-            }
-        }
-
-        // cut 8 -- at least one tau, b pair has inv. mass > 250 GeV
-        if ( (min_pairs.jet[0] + min_pairs.tau[0].tau).m() <= 250 &&
-             (min_pairs.jet[1] + min_pairs.tau[1].tau).m() <= 250 ) {
-            num_fail++;
-            print_error(events,"failed cut 8: both tau + b jets have inv. mass < 250 GeV");
-            continue;
+            if (abs(jets[i].eta()) >= 2.4) jets.erase(jets.begin()+i);
+            // else if (vec_taus.size() < 2) {
+            //         get_spatial_separation(jets[i],tau_candidates[0]) <= 0.5 ||
+            //         get_spatial_separation(jets[i],tau_candidates[1]) <= 0.5
+            // }
         }
 
 
@@ -428,6 +324,129 @@ int main() {
     return 0;
 }
 
+
+// --------- EVENT REJECTION SUBROUTINES --------- //
+
+int two_taus_pre_cluster(vector<Tau>& vec_taus, PseudoJet tau_candidates[], int events) {
+    // cuts 2-4
+    bool vertex_match = false, opposite_charge = false, pt_pass = false,
+         eta_pass = false, spatially_separated = false;
+    for (int i = 0; i < vec_taus.size() - 1; i++) {     // compare all combinations of taus
+        for (int j = i + 1; j < vec_taus.size(); j++) {
+            // cut 4 -- same vertex
+            // check vertex first, other criteria only checked if vertex matches
+            if (vec_taus[i].vertex == vec_taus[j].vertex) {
+                // if more than one vertex match in event (highly unusual), print warning
+                if (vertex_match == true)
+                    print_warning(events,"ANALYSIS NOT VALID FOR THIS EVENT -- "
+                          "more than one tau production vertex, check manually");
+
+                vertex_match = true;
+                // cut 4 -- opposite charge
+                if (vec_taus[i].is_tau_plus == !vec_taus[j].is_tau_plus)
+                    opposite_charge = true;
+                // cut 2 -- pt > 50
+                if (vec_taus[i].tau.pt() > 50 && vec_taus[j].tau.pt() > 50)
+                    pt_pass = true;
+                // cut 3 -- |eta| < 2.3
+                if (abs(vec_taus[i].tau.eta()) < 2.3 && abs(vec_taus[j].tau.eta()) < 2.3)
+                    eta_pass = true;
+                // cut 4 -- spatial separation
+                if (get_spatial_separation(vec_taus[i].tau,vec_taus[j].tau) > 0.5)
+                    spatially_separated = true;
+
+                // if taus are from same vertex, they go on array as candidates
+                // if there is more than one production vertex per event, this
+                //    will cause problems since only taus from the last vertex
+                //    will go on the array (very unlikely to happen)
+                tau_candidates[0] = vec_taus[i].tau;
+                tau_candidates[1] = vec_taus[j].tau;
+            }
+        }
+    }
+    if (!vertex_match) {
+        print_error(events,"failed cut 4: taus originate from different vertices");
+        return -1;
+    }
+    if (!opposite_charge) {
+        print_error(events,"failed cut 4: taus have same opposite charges");
+        return -1;
+    }
+    if (!pt_pass) {
+        print_error(events,"failed cut 2: taus have pt <= 50");
+        return -1;
+    }
+    if (!eta_pass) {
+        print_error(events,"failed cut 3: taus have |eta| >= 2.3");
+        return -1;
+    }
+    if (!spatially_separated) {
+        print_error(events,"failed cut 4: taus have separation <= 0.5");
+        return -1;
+    }
+
+}
+
+void two_taus_post_cluser(vector<PseudoJet> jets, vector<Tau> vec_taus, int events) {
+    // cut 5 -- original: at least two jets must remain for possible b-tagging
+    if (jets.size() < 2) {
+        print_error(events,"failed cut 5: not enough jets remaining after eta, "
+                           "separation cuts");
+        return -1;
+    }
+
+    // cut 6 -- at least two jets contain b's
+    int num_jets_with_b = 0;
+    for (int i = 0; i < jets.size(); i++) {
+        vector<PseudoJet> constits = jets[i].constituents();
+        for (int j = 0; j < constits.size(); j++) {
+            if (constits[j].user_index() == 1) {
+                num_jets_with_b++;
+                break;
+            }
+        }
+    }
+
+    if (num_jets_with_b < 2) {
+        print_error(events,"failed cut 6: not enough b-tagged jets");
+        return -1;
+    }
+
+
+    // --------- JET PAIRING, CUTS ON PAIRS --------- //
+    // cut 7 -- select tau, b pairs that minimizes mass difference b/w pairs
+    double min_diff = 10000000000000;       // very large number -- will be reset
+    struct {                                // immediately by first mass_diff
+        PseudoJet jet[2];
+        Tau tau[2];
+    } min_pairs;
+
+    for (int i = 0; i < jets.size(); i++) {
+        for (int j = 0; j < vec_taus.size(); j++) {
+            int i_next = (i+1)%jets.size(), j_next = (j+1)%vec_taus.size();
+            PseudoJet combo1 = jets[i] + vec_taus[j].tau;
+            PseudoJet combo2 = jets[i_next] + vec_taus[j_next].tau;
+            double mass_diff = abs(combo1.m() - combo2.m());
+
+            if (mass_diff < min_diff){
+                min_diff = mass_diff;
+                min_pairs.jet[0] = jets[i];
+                min_pairs.jet[1] = jets[i_next];
+                min_pairs.tau[0] = vec_taus[j];
+                min_pairs.tau[1] = vec_taus[j_next];
+            }
+        }
+    }
+
+    // cut 8 -- at least one tau, b pair has inv. mass > 250 GeV
+    if ( (min_pairs.jet[0] + min_pairs.tau[0].tau).m() <= 250 &&
+         (min_pairs.jet[1] + min_pairs.tau[1].tau).m() <= 250 ) {
+        num_fail++;
+        print_error(events,"failed cut 8: both tau + b jets have inv. mass < 250 GeV");
+        continue;
+    }
+
+}
 
 // --------- HELPER FUNCTIONS --------- //
 PseudoJet get_jet(vector<string> delimited) {
